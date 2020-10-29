@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.mk
 
 # Precompiled Headers
 *.gch
@@ -30,3 +31,18 @@
 *.exe
 *.out
 *.app
+
+# Prvate Eclipse enviroment files
+.project
+.cproject
+.settings/language.settings.xml
+
+# Basicly, anything deemed to be a password file. Tried to make idiot proof.
+Password.*
+password.*
+passwords.*
+Passwords.*
+
+# Don't need to sync the Debug versions, only the proper staged builds
+Debug/TheLionBot
+Release/TheLionBot
