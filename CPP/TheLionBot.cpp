@@ -8,7 +8,7 @@
 #include "TheLionBot.hpp"
 
 #include <iostream>
-#include "Passwords.h" //This needs replacing as an externally read file.
+#include "Passwords.h" //TODO: This needs replacing as an externally read file.
 
 using namespace std;
 
@@ -21,7 +21,7 @@ using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 //------------------------------------------------------------------------------
 
-string slackTocken( ) {
+string slackHTTP( string call ) {
 	string token = "Foo";
 
     try
@@ -29,7 +29,7 @@ string slackTocken( ) {
         auto const host = "slack.com"; //I doubt Slack will change it's URL.
         auto const port = "443";
         string token = SLACK_BOT_TOKEN;
-        string target = "/api/rtm.start?token=" + token;
+        string target = "/api/rtm." + call + "?token=" + token;
         int version = 11; //HTTP Version. 1.1 Recommended.
 
         net::io_context ioc;
@@ -62,27 +62,6 @@ string slackTocken( ) {
 
     	string raw = boost::beast::buffers_to_string(res.body().data());
 
-    	rapidjson::Document slackJSON;
-
-    	slackJSON.Parse(raw.c_str());
-
-        // Write the message to standard out
-//    	cout << slackJSON["url"].GetString() << endl;
-
-    	const auto URL = LUrlParser::ParseURL::parseURL(slackJSON["url"].GetString());
-
-    	if (URL.isValid())
-    	{
-    		cout << "Scheme    : " << URL.scheme_ << endl;
-    		cout << "Host      : " << URL.host_ << endl;
-    		cout << "Path      : " << URL.path_ << endl;
-    		cout << endl;
-    	}
-    	else
-    	{
-    		cout << "URL Parsing error: " << URL.errorCode_ << endl;
-    	}
-
     	// Gracefully close the stream
         beast::error_code ec;
         stream.shutdown(ec);
@@ -94,7 +73,7 @@ string slackTocken( ) {
             throw beast::system_error{ec};
 
         // If we get here then the connection is closed gracefully
-    	return URL.path_;
+    	return raw;
     }
     catch(std::exception const& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -111,32 +90,44 @@ int main(int argc, char** argv)
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
 
-        string host = "cerberus-xxxx.lb.slack-msgs.com";
-        auto port = "443";
-        string url = "/" + slackTocken( );
+        //To establish a Websocket we first need to request a new token from Slack via rtc.start
 
-        //Hello World!
-        //C0U8Y6BQW is the Norwich Hackspace channel ID for #random C0U8Y6BQW
-        //D81AQQPFT is the DM for Alan <--> TheLion
-        string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Hello World!\" , \"type\" : \"message\" } ";
+    	rapidjson::Document slackJSON;
+    	slackJSON.Parse(slackHTTP("start").c_str());
+    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slackJSON["url"].GetString());
+
+    	if (slackWSurl.isValid())
+    	{
+    		cout << "Scheme    : " << slackWSurl.scheme_ << endl;
+    		cout << "Host      : " << slackWSurl.host_ << endl;
+    		cout << "Path      : " << slackWSurl.path_ << endl;
+    		cout << endl;
+    	}
+    	else
+    	{
+    		cout << "URL Parsing error: " << slackWSurl.errorCode_ << endl;
+    	}
+
+       // string host = slackWSurl.host_;
+        auto port = "443";
+        string path = "/" + slackWSurl.path_;
+
+        // Now we have the required token with the 'path' we can use that to establish WSS
 
         net::io_context ioc;
 
         tcp::resolver resolver{ioc};
         websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
-        auto const results = resolver.resolve(host, port);
+        auto const results = resolver.resolve(slackWSurl.host_, port);
         auto ep = net::connect(get_lowest_layer(ws), results);
-        if(! SSL_set_tlsext_host_name(ws.next_layer().native_handle(), host.c_str()))
+        if(! SSL_set_tlsext_host_name(ws.next_layer().native_handle(), slackWSurl.host_.c_str()))
             throw beast::system_error(
                 beast::error_code(
                     static_cast<int>(::ERR_get_error()),
                     net::error::get_ssl_category()),
                 "Failed to set SNI Hostname");
 
-        // Update the host_ string. This will provide the value of the
-        // Host HTTP header during the WebSocket handshake.
-        // See https://tools.ietf.org/html/rfc7230#section-5.4
-        host += ':' + std::to_string(ep.port());
+        slackWSurl.host_ += ':' + std::to_string(ep.port());
 
         ws.next_layer().handshake(ssl::stream_base::client);
         ws.set_option(websocket::stream_base::decorator(
@@ -146,13 +137,17 @@ int main(int argc, char** argv)
                     std::string(BOOST_BEAST_VERSION_STRING) +
                         " websocket-client-coro");
             }));
-        ws.handshake(host, url);
+        ws.handshake(slackWSurl.host_, path);
 
         beast::flat_buffer buffer;
 
         ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
-        // Send the message
+        //Send the message a 'Hello World!' message
+        //C0U8Y6BQW is the Norwich Hackspace channel ID for #random C0U8Y6BQW
+        //D81AQQPFT is the DM for Alan <--> TheLion
+        string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Hello World!\" , \"type\" : \"message\" } ";
+
         cout << "WRITE: " << text << endl << endl;
         ws.write(net::buffer(text));
 
@@ -166,7 +161,6 @@ int main(int argc, char** argv)
         	 * {"type": "goodbye", "source": "gateway_server"}
         	 *
         	 */
-
         }
 
         // Close the WebSocket connection

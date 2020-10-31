@@ -1,5 +1,6 @@
 # TheLionBot
-The Lion: Norwich Hackspace's very own bot for Slack and Lion House automation.
+ 
+Norwich Hackspace's very own bot for Slack and automation of our Lion House premises.
 
 This bot is highly customized, and probably won't benifit other groups more than a how-to reference.
 
@@ -8,7 +9,7 @@ We will eventally attempt to split code into libs though. Maybe.
 ## Build Dependancies
 
 - Boost 1.70+
--- Beast
+- Beast
 - RapidJSON 1.1+
 - pThread
 
