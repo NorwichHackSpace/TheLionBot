@@ -8,6 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include CPP/LUrlParser/subdir.mk
 -include CPP/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -50,7 +51,7 @@ all: TheLionBot
 TheLionBot: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "TheLionBot" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/usr/local/ssl/include -L/usr/local/ssl/lib -o "TheLionBot" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
