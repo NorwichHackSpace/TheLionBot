@@ -90,11 +90,17 @@ int main(int argc, char** argv)
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
 
-        //To establish a Websocket we first need to request a new token from Slack via rtc.start
+        /*
+         * To establish a Websocket we first need to request a new token from Slack via rtc.start.
+         * This is then used to form the URL in a new WSS request, instead of upgrading the connection.
+         *
+         * As a bonus, we end up with a JSON of user and channel details also.
+         *
+         */
 
-    	rapidjson::Document slackJSON;
-    	slackJSON.Parse(slackHTTP("start").c_str());
-    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slackJSON["url"].GetString());
+    	rapidjson::Document slackStart;
+    	slackStart.Parse(slackHTTP("start").c_str());
+    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slackStart["url"].GetString());
 
     	if (slackWSurl.isValid())
     	{
@@ -108,8 +114,7 @@ int main(int argc, char** argv)
     		cout << "URL Parsing error: " << slackWSurl.errorCode_ << endl;
     	}
 
-       // string host = slackWSurl.host_;
-        auto port = "443";
+        const char * port = "443";
         string path = "/" + slackWSurl.path_;
 
         // Now we have the required token with the 'path' we can use that to establish WSS
@@ -153,9 +158,25 @@ int main(int argc, char** argv)
 
         // Read a message into our buffer
         while ( 1 ) {
-        	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
-        	cout << "READ: " << beast::make_printable(buffer.data()) << endl << endl;
         	buffer.clear();
+        	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
+
+        	rapidjson::Document slackRead;
+        	//beast::buffers_to_string(buffer.data());
+        	string buf = beast::buffers_to_string(buffer.data());
+        	slackRead.Parse( buf.c_str() );
+
+        	cout << "READ: " << buf << endl << endl;
+
+        	//If statements read left to right, so second statement is only checked if first does.
+        	if ( slackRead.HasMember("type") && slackRead["type"] == "message" ) {
+        		text = slackMsgHandle( 	slackRead["text"].GetString(), //Split into message.cpp
+        								slackRead["user"].GetString(),
+										slackRead["channel"].GetString(),
+										slackRead["event_ts"].GetString() );
+        		cout << "WRITE: " << text << endl << endl;
+        		ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        	}
         	/* TODO: Handle the server calling timeout, reconnect and avoid with ping messages.
         	 *
         	 * {"type": "goodbye", "source": "gateway_server"}

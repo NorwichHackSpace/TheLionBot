@@ -41,6 +41,7 @@
 
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
 
+std::string slackMsgHandle( std::string text, std::string user, std::string channel, std::string event_ts );
 
 //Do not add code below this line
 #endif /* CPP_THELIONBOT_HPP_ */

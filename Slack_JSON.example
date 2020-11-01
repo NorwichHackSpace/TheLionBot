@@ -1,0 +1,66 @@
+# Direct Message (Notice Channel starts with 'D')
+
+{
+  "client_msg_id": "03640b15-869b-4e72-b688-0110f0c4135f",
+  "suppress_notification": false,
+  "type": "message",
+  "text": "Who am I?",
+  "user": "U0V2J8FRA",
+  "team": "T0U7PLNEP",
+  "blocks": [
+    {
+      "type": "rich_text",
+      "block_id": "UQuh",
+      "elements": [
+        {
+          "type": "rich_text_section",
+          "elements": [
+            {
+              "type": "text",
+              "text": "Who am I?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source_team": "7PLNEP",
+  "user_team": "T0U7PLNEP",
+  "channel": "D81AQQPFT",
+  "event_ts": "1604194175.001800",
+  "ts": "1604194175.001800"
+}
+
+
+#In a channel #home-automation
+
+{
+  "client_msg_id": "6a825f13-9749-4d43-bc2c-4cdb387a4745",
+  "suppress_notification": false,
+  "type": "message",
+  "text": "test",
+  "user": "U0V2J8FRA",
+  "team": "T0U7PLNEP",
+  "blocks": [
+    {
+      "type": "rich_text",
+      "block_id": "W2H",
+      "elements": [
+        {
+          "type": "rich_text_section",
+          "elements": [
+            {
+              "type": "text",
+              "text": "test"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source_team": "T0U7PLNEP",
+  "user_team": "T0U7PLNEP",
+  "channel": "C67CBS9SN",
+  "event_ts": "1604195960.000200",
+  "ts": "1604195960.000200"
+}
