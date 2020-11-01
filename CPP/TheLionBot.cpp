@@ -169,7 +169,7 @@ int main(int argc, char** argv)
         	cout << "READ: " << buf << endl << endl;
 
         	//If statements read left to right, so second statement is only checked if first does.
-        	if ( slackRead.HasMember("type") && slackRead["type"] == "message" ) {
+        	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
         		text = slackMsgHandle( 	slackRead["text"].GetString(), //Split into message.cpp
         								slackRead["user"].GetString(),
 										slackRead["channel"].GetString(),
