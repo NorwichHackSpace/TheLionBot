@@ -3,17 +3,23 @@
  Name        : TheLionBot.cpp
  Authors     : Alan Percy Childs
  Version     :
+
+ For designing expressions you might want to try -> https://regexr.com/
+
 *******************************************************************************/
 
 #include "TheLionBot.hpp"
+#include <regex>
 
 using namespace std;
 
 string slackMsgHandle( string text, string user, string channel, string event_ts ) {
 	string JSON = "";
+	regex e;
 
-	//        who am I?
-	if ( text == "Who am I?" || text == "who am I" || text == "who am I?" ) {
+//who am I?
+	e = ("[wW]ho(\\s|m\\s)am [Ii][?.\\n]");
+	if ( regex_match(text , e) ) {
 		//Dan Robertson
 		if (user == "UCH3TAE7J") {
 			string responses[] = {
@@ -45,7 +51,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 		} else {
 			string responses[] = {
 					"I know you simply as " + user,
-					"Until I'm programmed better, I'll call you " + user,
+					"Until I'm progrtextammed better, I'll call you " + user,
 					"All your name are belong to you",
 					"That's a very profound question. Who are any of us, really?",
 					"You are a computer simulation of a real person using a complex AI virtual matrix to believe that you are real.",
@@ -57,5 +63,13 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 			JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } " ;
 		}
 	}
-	return JSON;
+
+//who is in?
+	//static string usersPresent[];
+	e = ("[wW]ho(m|)(s| is)(.currently.|\\W)(in|at|around|present)(\\s|[a-z])*[\\.?\n]");
+	if ( regex_match(text , e) ) {
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + "Don't ask me!" + "\" , \"type\" : \"message\" } " ;
+	}
+
+return JSON;
 }
