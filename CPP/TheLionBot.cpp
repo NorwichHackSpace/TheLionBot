@@ -174,8 +174,10 @@ int main(int argc, char** argv)
         								slackRead["user"].GetString(),
 										slackRead["channel"].GetString(),
 										slackRead["event_ts"].GetString() );
-        		cout << "WRITE: " << text << endl << endl;
-        		ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        		if (text != "") {
+        			cout << "WRITE: " << text << endl << endl;
+        			ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        		}
         	}
         	/* TODO: Handle the server calling timeout, reconnect and avoid with ping messages.
         	 *
