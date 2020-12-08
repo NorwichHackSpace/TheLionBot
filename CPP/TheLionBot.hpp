@@ -43,6 +43,8 @@
 
 std::string doorstatus();
 
+std::string whoami( std::string user );
+
 std::string slackMsgHandle( std::string text, std::string user, std::string channel, std::string event_ts );
 void slackDoorbotHandle( std::string text, std::string user, std::string channel, std::string event_ts );
 

@@ -182,7 +182,7 @@ int main(int argc, char** argv)
         			text = slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
         			if (text != "") {
         				cout << "WRITE: " << text << endl << endl;
-        				ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        				ws.write(net::buffer(text));
         			}
         		}
         	}
