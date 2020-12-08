@@ -66,10 +66,17 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 
 //who is in?
 	//static string usersPresent[];
+	//Door-status channel == CUQV9AGBW/
 	e = ("[wW]ho(m|)(s| is)(.currently.|\\W)(in|at|around|present)(\\s|[a-z])*[\\.?\n]");
 	if ( regex_match(text , e) ) {
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + "Don't ask me!" + "\" , \"type\" : \"message\" } " ;
 	}
+
+	e = ("([Ww]hat.|)([Ii]s) the( | front | main )(door|(.|)space).(status|open|unlocked|locked|closed|shut)(|.)");
+	if ( regex_match(text , e) ) {
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + "The front door is currently " + doorstatus() +  "\" , \"type\" : \"message\" } " ;
+	}
+
 
 return JSON;
 }

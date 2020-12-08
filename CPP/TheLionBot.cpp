@@ -157,7 +157,7 @@ int main(int argc, char** argv)
         ws.write(net::buffer(text));
 
         // Read a message into our buffer
-        while ( 1 ) {
+        while ( ws.is_open() ) {
         	buffer.clear();
         	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
@@ -170,13 +170,20 @@ int main(int argc, char** argv)
 
         	//If statements read left to right, so second statement is only checked if first does.
         	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
-        		text = slackMsgHandle( 	slackRead["text"].GetString(), //Split into message.cpp
-        								slackRead["user"].GetString(),
-										slackRead["channel"].GetString(),
-										slackRead["event_ts"].GetString() );
-        		if (text != "") {
-        			cout << "WRITE: " << text << endl << endl;
-        			ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        		// Get the strings
+        		string channel = slackRead["channel"].GetString();
+        		string user = slackRead["user"].GetString();
+        		string text = slackRead["text"].GetString();
+				string event = slackRead["event_ts"].GetString();
+				// Process the strings
+        		if (channel == "CUQV9AGBW" && user == "CMFJQ7NNB") { //Only for Dootbot messages in the #door-status channel
+        			slackDoorbotHandle( text, user, channel, event );
+        		} else {
+        			text = slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
+        			if (text != "") {
+        				cout << "WRITE: " << text << endl << endl;
+        				ws.write(net::buffer(text)); //TODO: ws.write would be more flexible if used in func
+        			}
         		}
         	}
         	/* TODO: Handle the server calling timeout, reconnect and avoid with ping messages.
