@@ -82,6 +82,17 @@ string slackHTTP( string call ) {
 
 }
 
+rapidjson::Document slackStart;
+
+string usertoname( string user) {
+	for (rapidjson::Value::ConstValueIterator itr = slackStart["users"].Begin(); itr != slackStart["users"].End(); ++itr) { // Ok
+	    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
+	    	return (*itr)["profile"]["display_name_normalized"].GetString();
+	    }
+	}
+	return user; //TODO: If we can't find, try making a new request.
+}
+
 
 int main(int argc, char** argv)
 {
@@ -98,7 +109,6 @@ int main(int argc, char** argv)
          *
          */
 
-    	rapidjson::Document slackStart;
     	slackStart.Parse(slackHTTP("start").c_str());
     	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slackStart["url"].GetString());
 
@@ -148,13 +158,14 @@ int main(int argc, char** argv)
 
         ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
+        /*
         //Send the message a 'Hello World!' message
         //C0U8Y6BQW is the Norwich Hackspace channel ID for #random C0U8Y6BQW
         //D81AQQPFT is the DM for Alan <--> TheLion
         string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Hello World!\" , \"type\" : \"message\" } ";
-
         cout << "WRITE: " << text << endl << endl;
         ws.write(net::buffer(text));
+        */
 
         // Read a message into our buffer
         while ( ws.is_open() ) {

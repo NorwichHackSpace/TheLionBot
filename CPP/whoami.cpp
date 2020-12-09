@@ -50,8 +50,10 @@ std::string whoami( string user ) {
 				"All your name are belong to you",
 				"That's a very profound question. Who are any of us, really?",
 				"You are a computer simulation of a real person using a complex AI virtual matrix to believe that you are real.",
-				"The real question is who are the mice?",
-				"You are one in a million."
+				"The real question, " + usertoname(user) + ", is who are the mice?",
+				"You are one in a million," + usertoname(user) + ".",
+				"Can I call you " + usertoname(user) + "?",
+				usertoname(user)
 		};
 		int size = ((&responses)[1] - responses);
 		int random = rand() % size;

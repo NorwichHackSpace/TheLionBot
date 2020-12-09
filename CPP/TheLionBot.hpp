@@ -41,9 +41,18 @@
 
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
 
+//TheLionBot.cpp
+std::string usertoname( std::string user) ;
+
+//doorbot.cpp
 std::string doorstatus();
 
+//whoami.cpp
 std::string whoami( std::string user );
+
+//whoisin.cpp
+std::string amendlog( std::string text, std::string user );
+std::string occupancy();
 
 std::string slackMsgHandle( std::string text, std::string user, std::string channel, std::string event_ts );
 void slackDoorbotHandle( std::string text, std::string user, std::string channel, std::string event_ts );
