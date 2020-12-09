@@ -52,6 +52,7 @@ std::string whoami( std::string user );
 
 //whoisin.cpp
 std::string amendlog( std::string text, std::string user );
+std::string amendlog( unsigned int population );
 std::string occupancy();
 
 std::string slackMsgHandle( std::string text, std::string user, std::string channel, std::string event_ts );

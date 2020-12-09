@@ -3,12 +3,14 @@
  Name        : TheLionBot.cpp
  Authors     : Alan Percy Childs
  Version     :
+ Wiki Page	 : https://wiki.norwichhackspace.org/index.php?title=Slack
+ Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
 
 #include "TheLionBot.hpp"
 
 #include <iostream>
-#include "Passwords.h" //TODO: This needs replacing as an externally read file.
+#include "Passwords.h"
 
 using namespace std;
 
@@ -85,11 +87,17 @@ string slackHTTP( string call ) {
 rapidjson::Document slackStart;
 
 string usertoname( string user) {
+	// TODO: Check 'user' is a Slack user ID and not already converted
+	// bool string match  -- name begins with 'U' has a number, all letters in caps, and is nine chars long -- , user
+	//
+
+	// else if needs converting
 	for (rapidjson::Value::ConstValueIterator itr = slackStart["users"].Begin(); itr != slackStart["users"].End(); ++itr) { // Ok
 	    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
 	    	return (*itr)["profile"]["display_name_normalized"].GetString();
 	    }
 	}
+
 	return user; //TODO: If we can't find, try making a new request.
 }
 
@@ -173,7 +181,6 @@ int main(int argc, char** argv)
         	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
         	rapidjson::Document slackRead;
-        	//beast::buffers_to_string(buffer.data());
         	string buf = beast::buffers_to_string(buffer.data());
         	slackRead.Parse( buf.c_str() );
 
@@ -210,12 +217,14 @@ int main(int argc, char** argv)
         // If we get here then the connection is closed gracefully
 
         // The make_printable() function helps print a ConstBufferSequence
-        std::cout << beast::make_printable(buffer.data()) << std::endl;
+        std::cout << beast::make_printable(buffer.data()) << std::endl; //Message why we closed
+
     }
     catch(std::exception const& e)
     {
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }
