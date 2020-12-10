@@ -18,13 +18,9 @@ std::string whoami( string user ) {
 	//Dan Robertson
 	if (user == "UCH3TAE7J") {
 		string responses[] = {
-					"Dan. Always Dan. Nothing else.",
-					"Big Dan",
 					"Mr Robertson",
-					"The DR",
-					"The great Dan. Master of tweaking. Slayer of rule zero and chief 3D printing breakinger.",
-					"DAN.",
-					"I know what your not."
+					"The great Dan.",
+					"Dan.",
 		};
 		int size = ((&responses)[1] - responses);
 		int random = rand() % size;
