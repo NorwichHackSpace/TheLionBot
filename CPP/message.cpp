@@ -43,7 +43,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 		}
 
 		e = ("([Ww]ho)(m|)(\\s).*");
-		if ( !(regex_match(text , e)) ) { //Check this is a command not a question...
+		if ( !(regex_match(text , e)) ) { //Check this is a command NOT a question handled below
 			e = ("^([\\w]*)");
 			smatch match;
 			regex_search(text, match, e);
@@ -55,7 +55,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 		}
 	}
 
-	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |)(in|out|here|left|leaving).*)");
+	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got |)(in|arriving|out|here|left|leaving)\\W*)");
 	if ( regex_match(text , e) ) {
 		string response = amendlog( text, user );
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
@@ -70,7 +70,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 		}
 
 	//Query
-	e = ("[wW]ho(m|'|’|)(s| is)(.currently.|\\W)(in|at|around|present)(\\s|[a-z])*[\\.?\n]");
+	e = ("[wW]ho(m|'|’|)(s| is)(.currently.|\\W)(in|at|around|present)( .*|\\W|)");
 	if ( regex_match(text , e) ) {
 		string response = occupancy();
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;

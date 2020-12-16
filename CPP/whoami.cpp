@@ -13,14 +13,27 @@
 
 using namespace std;
 
+response iamwho;
 std::string whoami( string user ) {
 	string response;
+	//Craig Bane
+	if (user == "U3YFJDXSL") {
+		string responses[] = {
+				"Apparently, you are a God."
+		};
+		int size = ((&responses)[1] - responses);
+		int random = rand() % size;
+		response = responses[random];
+	}
 	//Dan Robertson
 	if (user == "UCH3TAE7J") {
 		string responses[] = {
 					"Mr Robertson",
 					"The great Dan.",
 					"Dan.",
+					"ooooooooOOOOOOOOOOOooooooooooooooooooo",
+					"I'm not random enough to give a non offensive response."
+					"3D Printing Room Lead ( 3D Printers, Casting), Core Team member, Runner of Killer Wing Dice and Killer Wing Designs",
 		};
 		int size = ((&responses)[1] - responses);
 		int random = rand() % size;
@@ -49,11 +62,11 @@ std::string whoami( string user ) {
 				"The real question, " + usertoname(user) + ", is who are the mice?",
 				"You are one in a million," + usertoname(user) + ".",
 				"Can I call you " + usertoname(user) + "?",
+				"Having some sort of identity crisis?",
 				usertoname(user)
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[iamwho.random(size)];
 	}
 	return response;
 }

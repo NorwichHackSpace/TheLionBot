@@ -15,6 +15,8 @@ using namespace std;
 
 string occupying = "";
 
+response leaving;
+response arriving;
 std::string amendlog( string text, string user ) {
 
 	string response;
@@ -34,8 +36,7 @@ std::string amendlog( string text, string user ) {
 					"Till next time!",
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[leaving.random(size)];
 	} else { // If not leaving, must be coming in...
 		occupying = user;
 		string responses[] = {
@@ -46,20 +47,19 @@ std::string amendlog( string text, string user ) {
 					"Let the magic commence!"
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[arriving.random(size)];
 	}
 
  return response;
 }
 
+response emptying;
 std::string amendlog( unsigned int population ) { //Everybody out!
 	string response;
 
 	if (!population) {
 		occupying = "";
 		string responses[] = {
-				"Looks empty.",
 				"Thanks for the update!",
 				"Brill, I'll make a note of it.",
 				"Well, everyone but me. I'll keep an eye. O.o ",
@@ -73,13 +73,14 @@ std::string amendlog( unsigned int population ) { //Everybody out!
 				"Thanks for checking.",
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[emptying.random(size)];
 	}
 
 	return response;
 }
 
+response emptied;
+response ishere;
 std::string occupancy() {
 	string response;
 
@@ -94,8 +95,7 @@ std::string occupancy() {
 					"Did someone come in without me seeing?",
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[emptied.random(size)];
 	} else {
 		string responses[] = {
 					"I think " + usertoname(occupying) + " is in.",
@@ -107,8 +107,7 @@ std::string occupancy() {
 					usertoname(occupying) + " should be around",
 		};
 		int size = ((&responses)[1] - responses);
-		int random = rand() % size;
-		response = responses[random];
+		response = responses[ishere.random(size)];
 	}
 
 	return response;

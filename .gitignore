@@ -36,6 +36,7 @@
 .project
 .cproject
 .settings/language.settings.xml
+.metadata
 
 # Basicly, anything deemed to be a password file. Tried to make idiot proof.
 Password.*
@@ -44,5 +45,6 @@ passwords.*
 Passwords.*
 
 # Don't need to sync the Debug versions, only the proper staged builds
+# Also, don't sync the builds until the passwords require an external file
 Debug/TheLionBot
 Release/TheLionBot

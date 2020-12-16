@@ -44,6 +44,21 @@
 //TheLionBot.cpp
 std::string usertoname( std::string user) ;
 
+//Handle responses
+class response {
+	private:
+		int lastmsg = -1;
+	public:
+		int random(int size) {
+			int msgnum = (rand() % size);
+			while (msgnum == lastmsg) {
+				msgnum = (rand() % size);
+			}
+			lastmsg = msgnum;
+			return msgnum;
+		};
+};
+
 //doorbot.cpp
 std::string doorstatus();
 
