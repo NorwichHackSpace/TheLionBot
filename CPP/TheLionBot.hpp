@@ -57,7 +57,14 @@ class response {
 			lastmsg = msgnum;
 			return msgnum;
 		};
+		int sequence(int size) {
+			if (++lastmsg > size) { lastmsg = 0; }
+			return lastmsg;
+		};
 };
+
+//jokes.cpp
+std::string xmas_joke();
 
 //doorbot.cpp
 std::string doorstatus();

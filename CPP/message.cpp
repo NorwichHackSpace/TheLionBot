@@ -18,6 +18,40 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 	string JSON = "";
 	regex e;
 
+//random debugging thingy
+	//Based on the repeating responses, it appears the rand() function is very unrandom the way I'm using it.
+	//Adding this just while I test just how truly unrandom it is, by seeing how many times certain numbers repeat.
+	e = ("(Give us some random, Lion.)"); //Be specific for now, this is just for debuggin.
+	#define NUM_RANDOMS 100000
+	#define HIGHEST_RANDOM 10
+	if ( regex_match(text , e) ) {
+		string response = "I just generated " + to_string(NUM_RANDOMS) + " Randoms between 0 and " + to_string(HIGHEST_RANDOM) + ":  \\n";
+		string rndams_string = "";
+		unsigned int rndams[NUM_RANDOMS] = {};
+		for (unsigned int i = 0; i < NUM_RANDOMS; i++) {
+			rndams[i] = (rand() % HIGHEST_RANDOM); //Pick a 'random' number between 0 and 100.
+		}
+		unsigned int nums_of_value;
+		for (unsigned int i = 0; i < HIGHEST_RANDOM; i++) { //Number to match
+			nums_of_value = 0;
+			for (unsigned int elems = 0; elems < NUM_RANDOMS; elems++) {
+				if (rndams[elems] == i) { nums_of_value++; } //Check if the number inside the element matches the number we are looking for.
+			}
+			response = response + to_string(i) + " occurred " + to_string(nums_of_value) + " times. \\n ";
+		}
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		return JSON;
+	}
+
+//jokes
+	e = ("([Aa]nother|[Cc]an|[Tt]ell|[Ss]ay|[Gg]ive).*([Jj]oke|[Ff]unny)(| please)(| [Ll]ion)\\W*");
+	if ( regex_match(text , e) ) {
+		string response = xmas_joke();
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		return JSON;
+	}
+
+
 //who am I?
 	e = ("[wW]ho(\\s|m\\s)am [Ii][?.\\n]");
 	if ( regex_match(text , e) ) {
@@ -89,3 +123,9 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 
 return JSON;
 }
+
+string idle_responses[] = {
+		"In the hackspace, the Norwich hackspace \n The lion sleeps tonight \n Wee heeheehee weeoh aweem away \n Wee heeheehee weeoh aweem away \n",
+		"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?"
+		"Think I just saw a tumble weed."
+};
