@@ -2,7 +2,7 @@
  The Lion: Norwich Hackspace's very own bot for Slack and Lion House automation
  Name        : TheLionBot.cpp
  Authors     : Alan Percy Childs
- Version     :
+ Version     : Test
  Wiki Page	 : https://wiki.norwichhackspace.org/index.php?title=Slack
  Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
@@ -31,18 +31,15 @@ int main(int argc, char** argv)
 	srand(time(0)); // Make our random a new random.
 	try
     {
-        ssl::context ctx{ssl::context::tlsv12_client};
-        load_root_certificates(ctx);
 
         /*
          * To establish a Websocket we first need to request a new token from Slack via rtc.start.
          * This is then used to form the URL in a new WSS request, instead of upgrading the connection.
-         *
-         * As a bonus, we end up with a JSON of user and channel details also.
-         *
+         * Note that we could just use rtc.connect but by using rtc.start, as a bonus, we end up with a JSON
+         * of user and channel details also.
          */
 
-        slack::format.Parse(slack::HTTP("start").c_str());
+        slack::format.Parse(slack::HTTP("start").c_str()); //Populate 'format' with data from s Slack Web API call 'start'
     	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::format["url"].GetString());
 
     	if (slackWSurl.isValid())
@@ -62,8 +59,14 @@ int main(int argc, char** argv)
 
         // Now we have the required token with the 'path' we can use that to establish WSS
 
+
+
         net::io_context ioc;
         tcp::resolver resolver{ioc};
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        load_root_certificates(ctx);
+
         websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
         auto const results = resolver.resolve(slackWSurl.host_, port);
         auto ep = net::connect(get_lowest_layer(ws), results);
@@ -74,7 +77,7 @@ int main(int argc, char** argv)
                     net::error::get_ssl_category()),
                 "Failed to set SNI Hostname");
 
-        slackWSurl.host_ += ':' + std::to_string(ep.port());
+        slackWSurl.host_ += ':' + to_string(ep.port());
 
         ws.next_layer().handshake(ssl::stream_base::client);
         ws.set_option(websocket::stream_base::decorator(
@@ -86,9 +89,14 @@ int main(int argc, char** argv)
             }));
         ws.handshake(slackWSurl.host_, path);
 
+
+
         beast::flat_buffer buffer;
 
-        ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
+        ws.read(buffer);
+
+
+
 
 
 
@@ -101,8 +109,8 @@ int main(int argc, char** argv)
         string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
         cout << "WRITE: " << text << endl << endl;
         ws.write(net::buffer(text));
-        text = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
-        ws.write(net::buffer(text));
+        //text = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
+        //ws.write(net::buffer(text));
 
         // Read a message into our buffer
         while ( ws.is_open() ) {
@@ -140,6 +148,8 @@ int main(int argc, char** argv)
         	 */
         }
 
+
+
         // Close the WebSocket connection
         ws.close(websocket::close_code::normal);
 
@@ -147,6 +157,10 @@ int main(int argc, char** argv)
 
         // The make_printable() function helps print a ConstBufferSequence
         std::cout << beast::make_printable(buffer.data()) << std::endl; //Message why we closed
+
+
+
+
 
     }
     catch(std::exception const& e)
