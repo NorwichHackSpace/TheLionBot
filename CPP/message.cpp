@@ -22,7 +22,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 	//Based on the repeating responses, it appears the rand() function is very unrandom the way I'm using it.
 	//Adding this just while I test just how truly unrandom it is, by seeing how many times certain numbers repeat.
 	e = ("(Give us some random, Lion.)"); //Be specific for now, this is just for debuggin.
-	#define NUM_RANDOMS 100000
+	#define NUM_RANDOMS 1000000
 	#define HIGHEST_RANDOM 10
 	if ( regex_match(text , e) ) {
 		string response = "I just generated " + to_string(NUM_RANDOMS) + " Randoms between 0 and " + to_string(HIGHEST_RANDOM) + ":  \\n";

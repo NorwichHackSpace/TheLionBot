@@ -104,6 +104,7 @@ string usertoname( string user) {
 
 int main(int argc, char** argv)
 {
+	srand(time(0)); // Make our random a new random.
 	try
     {
         ssl::context ctx{ssl::context::tlsv12_client};
@@ -178,6 +179,7 @@ int main(int argc, char** argv)
         // Read a message into our buffer
         while ( ws.is_open() ) {
         	buffer.clear();
+        	srand(time(0)); // Normally we wouldn't need to recall a srand(), but our chat can be idle for a few hours at a time.
         	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
         	rapidjson::Document slackRead;
