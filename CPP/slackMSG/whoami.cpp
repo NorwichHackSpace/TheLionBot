@@ -8,13 +8,13 @@
 
 *******************************************************************************/
 
-#include "TheLionBot.hpp"
+#include "../slack.hpp"
 #include <regex>
 
 using namespace std;
 
 response iamwho;
-std::string whoami( string user ) {
+std::string slack::whoami( string user ) {
 	string response;
 	//Craig Bane
 	if (user == "U3YFJDXSL") {
@@ -59,11 +59,11 @@ std::string whoami( string user ) {
 				"All your name are belong to you",
 				"That's a very profound question. Who are any of us, really?",
 				"You are a computer simulation of a real person using a complex AI virtual matrix to believe that you are real.",
-				"The real question, " + usertoname(user) + ", is who are the mice?",
-				"You are one in a million," + usertoname(user) + ".",
-				"Can I call you " + usertoname(user) + "?",
+				"The real question, " + slack::usertoname(user) + ", is who are the mice?",
+				"You are one in a million," + slack::usertoname(user) + ".",
+				"Can I call you " + slack::usertoname(user) + "?",
 				"Having some sort of identity crisis?",
-				usertoname(user)
+				slack::usertoname(user)
 		};
 		int size = ((&responses)[1] - responses);
 		response = responses[iamwho.random(size)];

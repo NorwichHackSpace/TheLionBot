@@ -8,13 +8,13 @@
 
 *******************************************************************************/
 
-#include "TheLionBot.hpp"
+#include "../slack.hpp"
 #include <regex>
 
 using namespace std;
 
 response jokes;
-std::string xmas_joke( ) {
+std::string slack::xmas_joke( ) {
 	string responses[] = {
 			"What goes 'Oh, Oh, Oh'? Santa walking backwards",
 			"Why are Christmas trees bad knitters? They keep losing their needles",

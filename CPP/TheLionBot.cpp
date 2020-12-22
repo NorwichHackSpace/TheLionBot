@@ -8,6 +8,7 @@
 *******************************************************************************/
 
 #include "TheLionBot.hpp"
+#include "slack.hpp"
 
 #include <iostream>
 #include "Passwords.h"
@@ -23,84 +24,7 @@ using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 //------------------------------------------------------------------------------
 
-string slackHTTP( string call ) {
-	string token = "Foo";
-
-    try
-    {
-        auto const host = "slack.com"; //I doubt Slack will change it's URL.
-        auto const port = "443";
-        string token = SLACK_BOT_TOKEN;
-        string target = "/api/rtm." + call + "?token=" + token;
-        int version = 11; //HTTP Version. 1.1 Recommended.
-
-        net::io_context ioc;
-
-        //TODO: Avoid load_root_certificates every time function called
-        ssl::context ctx{ssl::context::tlsv12_client};
-        load_root_certificates(ctx);
-
-        ctx.set_verify_mode(ssl::verify_peer);
-        tcp::resolver resolver(ioc);
-        beast::ssl_stream<beast::tcp_stream> stream(ioc, ctx);
-        if(! SSL_set_tlsext_host_name(stream.native_handle(), host))
-        {
-            beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
-            throw beast::system_error{ec};
-        }
-
-        auto const results = resolver.resolve(host, port);
-        beast::get_lowest_layer(stream).connect(results); //TODO: Find out why this warns in Eclipse
-        stream.handshake(ssl::stream_base::client);
-        http::request<http::string_body> req{http::verb::get, target, version};
-        req.set(http::field::host, host);
-        req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-        // Send the HTTP request to the remote host
-        http::write(stream, req);
-        beast::flat_buffer buffer;
-        http::response<http::dynamic_body> res;
-        http::read(stream, buffer, res);
-
-    	string raw = boost::beast::buffers_to_string(res.body().data());
-
-    	// Gracefully close the stream
-        beast::error_code ec;
-        stream.shutdown(ec);
-        if(ec == net::error::eof)
-        {
-            ec = {};
-        }
-        if(ec)
-            throw beast::system_error{ec};
-
-        // If we get here then the connection is closed gracefully
-    	return raw;
-    }
-    catch(std::exception const& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return "Failed"; //TODO: Probably want to handle gracefully.
-    }
-
-}
-
-rapidjson::Document slackStart;
-
-string usertoname( string user) {
-	// TODO: Check 'user' is a Slack user ID and not already converted
-	// bool string match  -- name begins with 'U' has a number, all letters in caps, and is nine chars long -- , user
-	//
-
-	// else if needs converting
-	for (rapidjson::Value::ConstValueIterator itr = slackStart["users"].Begin(); itr != slackStart["users"].End(); ++itr) { // Ok
-	    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
-	    	return (*itr)["profile"]["display_name_normalized"].GetString();
-	    }
-	}
-
-	return user; //TODO: If we can't find, try making a new request.
-}
-
+rapidjson::Document slack::format;
 
 int main(int argc, char** argv)
 {
@@ -118,8 +42,8 @@ int main(int argc, char** argv)
          *
          */
 
-    	slackStart.Parse(slackHTTP("start").c_str());
-    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slackStart["url"].GetString());
+        slack::format.Parse(slack::HTTP("start").c_str());
+    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::format["url"].GetString());
 
     	if (slackWSurl.isValid())
     	{
@@ -139,7 +63,6 @@ int main(int argc, char** argv)
         // Now we have the required token with the 'path' we can use that to establish WSS
 
         net::io_context ioc;
-
         tcp::resolver resolver{ioc};
         websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
         auto const results = resolver.resolve(slackWSurl.host_, port);
@@ -167,20 +90,25 @@ int main(int argc, char** argv)
 
         ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
 
+
+
         /*
-        //Send the message a 'Hello World!' message
-        //C0U8Y6BQW is the Norwich Hackspace channel ID for #random C0U8Y6BQW
+        //Send Percy and #door-status a 'version' alert that we have restarted
+        //C0U8Y6BQW is the Norwich Hackspace channel ID for #random
+        //CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
         //D81AQQPFT is the DM for Alan <--> TheLion
-        string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Hello World!\" , \"type\" : \"message\" } ";
+        */
+        string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
         cout << "WRITE: " << text << endl << endl;
         ws.write(net::buffer(text));
-        */
+        text = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
+        ws.write(net::buffer(text));
 
         // Read a message into our buffer
         while ( ws.is_open() ) {
         	buffer.clear();
-        	srand(time(0)); // Normally we wouldn't need to recall a srand(), but our chat can be idle for a few hours at a time.
-        	ws.read(buffer); //TODO: Thread this if concurrentcy is needed later on
+        	srand(time(0)); // Normally we wouldn't need to recall a srand()
+        	ws.read(buffer); //TODO: Thread this if concurrency is needed later on
 
         	rapidjson::Document slackRead;
         	string buf = beast::buffers_to_string(buffer.data());
@@ -188,7 +116,6 @@ int main(int argc, char** argv)
 
         	cout << "READ: " << buf << endl << endl;
 
-        	//If statements read left to right, so second statement is only checked if first does.
         	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
         		// Get the strings
         		string channel = slackRead["channel"].GetString();
@@ -197,9 +124,9 @@ int main(int argc, char** argv)
 				string event = slackRead["event_ts"].GetString();
 				// Process the strings
         		if (channel == "CUQV9AGBW" && user == "CMFJQ7NNB") { //Only for Dootbot messages in the #door-status channel
-        			slackDoorbotHandle( text, user, channel, event );
+        			slack::slackDoorbotHandle( text, user, channel, event );
         		} else {
-        			text = slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
+        			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
         			if (text != "") {
         				cout << "WRITE: " << text << endl << endl;
         				ws.write(net::buffer(text));

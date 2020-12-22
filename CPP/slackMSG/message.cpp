@@ -8,12 +8,12 @@
 
 *******************************************************************************/
 
-#include "TheLionBot.hpp"
+#include "../slack.hpp"
 #include <regex>
 
 using namespace std;
 
-string slackMsgHandle( string text, string user, string channel, string event_ts ) {
+string slack::slackMsgHandle( string text, string user, string channel, string event_ts ) {
 
 	string JSON = "";
 	regex e;
@@ -46,7 +46,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 //jokes
 	e = ("([Aa]nother|[Cc]an|[Tt]ell|[Ss]ay|[Gg]ive).*([Jj]oke|[Ff]unny)(| please)(| [Ll]ion)\\W*");
 	if ( regex_match(text , e) ) {
-		string response = xmas_joke();
+		string response = slack::xmas_joke();
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}
@@ -55,7 +55,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 //who am I?
 	e = ("[wW]ho(\\s|m\\s)am [Ii][?.\\n]");
 	if ( regex_match(text , e) ) {
-		string response = whoami(user);
+		string response = slack::whoami(user);
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}
@@ -71,7 +71,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 
 		e = ("([Nn]o)( one|body)(\\s).*");
 		if ( (regex_match(text , e)) ) {
-			string response = amendlog( 0 );
+			string response = slack::amendlog( 0 );
 			JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 			return JSON;
 		}
@@ -82,7 +82,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 			smatch match;
 			regex_search(text, match, e);
 			user = match[0] ;
-			string response = amendlog( text, user );
+			string response = slack::amendlog( text, user );
 			JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 			return JSON;
 
@@ -91,14 +91,14 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 
 	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got |)(in|arriving|out|here|left|leaving)\\W*)");
 	if ( regex_match(text , e) ) {
-		string response = amendlog( text, user );
+		string response = slack::amendlog( text, user );
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}
 
 	e = ("([Ee]veryone|[Aa]ll).*( out| empty| left).*");
 	if ( regex_match(text , e) ) {
-			string response = amendlog( 0 );
+			string response = slack::amendlog( 0 );
 			JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 			return JSON;
 		}
@@ -106,7 +106,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 	//Query
 	e = ("[wW]ho(m|'|’|)(s| is)(.currently.|\\W)(in|at|around|present)( .*|\\W|)");
 	if ( regex_match(text , e) ) {
-		string response = occupancy();
+		string response = slack::occupancy();
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}
@@ -116,7 +116,7 @@ string slackMsgHandle( string text, string user, string channel, string event_ts
 //is door locked?
 	e = ("([Ww]hat.|)([Ii]s) the( | front | main )(door|(.|)space).(status|open|unlocked|locked|closed|shut)(|.)");
 	if ( regex_match(text , e) ) {
-		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + "The front door is currently " + doorstatus() +  "\" , \"type\" : \"message\" } " ;
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + "The front door is currently " + slack::doorstatus() +  "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}
 

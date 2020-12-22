@@ -8,7 +8,7 @@
 
 *******************************************************************************/
 
-#include "TheLionBot.hpp"
+#include "../slack.hpp"
 #include <regex>
 
 using namespace std;
@@ -17,7 +17,7 @@ string occupying = "";
 
 response leaving;
 response arriving;
-std::string amendlog( string text, string user ) {
+std::string slack::amendlog( string text, string user ) {
 
 	string response;
 	regex e;
@@ -26,10 +26,10 @@ std::string amendlog( string text, string user ) {
 	if ( regex_match(text , e) ) {
 		if (occupying == user) occupying = "";
 		string responses[] = {
-					"Hope it went well " + usertoname(user) + "!",
+					"Hope it went well " + slack::usertoname(user) + "!",
 					"Please make sure the door is closed properly, it's a bit sticky sometimes.",
-					"See ya later " + usertoname(user) + "!",
-					"See you soon " + usertoname(user) + "!",
+					"See ya later " + slack::usertoname(user) + "!",
+					"See you soon " + slack::usertoname(user) + "!",
 					"Laters!",
 					"Don't forget the lights!",
 					"It's been nice company. :-)",
@@ -40,8 +40,8 @@ std::string amendlog( string text, string user ) {
 	} else { // If not leaving, must be coming in...
 		occupying = user;
 		string responses[] = {
-					"Welcome to the Hackspace " + usertoname(user),
-					"Enjoy your stay " + usertoname(user),
+					"Welcome to the Hackspace " + slack::usertoname(user),
+					"Enjoy your stay " + slack::usertoname(user),
 					"Thank you for letting us know!",
 					"Fire the lasers, pew, pew, pew!",
 					"Let the magic commence!"
@@ -54,7 +54,7 @@ std::string amendlog( string text, string user ) {
 }
 
 response emptying;
-std::string amendlog( unsigned int population ) { //Everybody out!
+std::string slack::amendlog( unsigned int population ) { //Everybody out!
 	string response;
 
 	if (!population) {
@@ -81,7 +81,7 @@ std::string amendlog( unsigned int population ) { //Everybody out!
 
 response emptied;
 response ishere;
-std::string occupancy() {
+std::string slack::occupancy() {
 	string response;
 
 	if (occupying == "") {
@@ -98,13 +98,13 @@ std::string occupancy() {
 		response = responses[emptied.random(size)];
 	} else {
 		string responses[] = {
-					"I think " + usertoname(occupying) + " is in.",
-					"Looks like " + usertoname(occupying) + " is about.",
-					"Looks like " + usertoname(occupying) + " is in.",
-					"Looks like " + usertoname(occupying) + " is here.",
-					usertoname(occupying) + " is here.",
-					usertoname(occupying) + " checked in.",
-					usertoname(occupying) + " should be around",
+					"I think " + slack::usertoname(occupying) + " is in.",
+					"Looks like " + slack::usertoname(occupying) + " is about.",
+					"Looks like " + slack::usertoname(occupying) + " is in.",
+					"Looks like " + slack::usertoname(occupying) + " is here.",
+					slack::usertoname(occupying) + " is here.",
+					slack::usertoname(occupying) + " checked in.",
+					slack::usertoname(occupying) + " should be around",
 		};
 		int size = ((&responses)[1] - responses);
 		response = responses[ishere.random(size)];

@@ -8,21 +8,21 @@
 
 *******************************************************************************/
 
-#include "TheLionBot.hpp"
+#include "../slack.hpp"
 #include <regex>
 
 using namespace std;
 
 bool doorlocked = true;
 
-std::string doorstatus() {
+std::string slack::doorstatus() {
 	if (doorlocked) {
 		return "locked";
 	}
 	return "unlocked";
 }
 
-void slackDoorbotHandle( string text, string user, string channel, string event_ts ) {
+void slack::slackDoorbotHandle( string text, string user, string channel, string event_ts ) {
 	regex e;
 	e = ("Door unlocked by .+ at .+");
 	if ( regex_match(text , e) ) {
