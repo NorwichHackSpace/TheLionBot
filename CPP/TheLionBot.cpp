@@ -2,7 +2,7 @@
  The Lion: Norwich Hackspace's very own bot for Slack and Lion House automation
  Name        : TheLionBot.cpp
  Authors     : Alan Percy Childs
- Version     : Test
+ Version     :
  Wiki Page	 : https://wiki.norwichhackspace.org/index.php?title=Slack
  Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
@@ -24,7 +24,13 @@ using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 //------------------------------------------------------------------------------
 
-rapidjson::Document slack::format;
+rapidjson::Document slack::format; //Slack info, slack info everywhere!
+
+void
+fail(beast::error_code ec, char const* what)
+{
+    std::cout << what << ": " << ec.message() << std::endl;
+}
 
 int main(int argc, char** argv)
 {
@@ -58,109 +64,41 @@ int main(int argc, char** argv)
         string path = "/" + slackWSurl.path_;
 
         // Now we have the required token with the 'path' we can use that to establish WSS
-
-
-
         net::io_context ioc;
-        tcp::resolver resolver{ioc};
-
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
 
-        websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
-        auto const results = resolver.resolve(slackWSurl.host_, port);
-        auto ep = net::connect(get_lowest_layer(ws), results);
-        if(! SSL_set_tlsext_host_name(ws.next_layer().native_handle(), slackWSurl.host_.c_str()))
-            throw beast::system_error(
-                beast::error_code(
-                    static_cast<int>(::ERR_get_error()),
-                    net::error::get_ssl_category()),
-                "Failed to set SNI Hostname");
-
-        slackWSurl.host_ += ':' + to_string(ep.port());
-
-        ws.next_layer().handshake(ssl::stream_base::client);
-        ws.set_option(websocket::stream_base::decorator(
-            [](websocket::request_type& req)
-            {
-                req.set(http::field::user_agent,
-                    std::string(BOOST_BEAST_VERSION_STRING) +
-                        " websocket-client-coro");
-            }));
-        ws.handshake(slackWSurl.host_, path);
-
-
-
-        beast::flat_buffer buffer;
-
-        ws.read(buffer);
-
-
-
-
-
 
         /*
-        //Send Percy and #door-status a 'version' alert that we have restarted
-        //C0U8Y6BQW is the Norwich Hackspace channel ID for #random
-        //CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
-        //D81AQQPFT is the DM for Alan <--> TheLion
-        */
-        string text = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
-        cout << "WRITE: " << text << endl << endl;
-        ws.write(net::buffer(text));
-        //text = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
-        //ws.write(net::buffer(text));
+         * Find sending a build message handy for dev work...
+         * Send Percy and #door-status a 'version' alert that we have restarted
+         * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
+         * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
+         * D81AQQPFT is the DM for Alan <--> TheLion
+         */
+        string buildMSG = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
 
-        // Read a message into our buffer
-        while ( ws.is_open() ) {
-        	buffer.clear();
-        	srand(time(0)); // Normally we wouldn't need to recall a srand()
-        	ws.read(buffer); //TODO: Thread this if concurrency is needed later on
+        // Launch the asynchronous operation
+        auto id = "ws";
+        auto const handle = boost::make_shared<shared_state>(id);
+        boost::make_shared<ws_session>(
+        		  ioc
+				, ctx
+				, handle
+				)->do_start(
+        		slackWSurl.host_
+				, port
+				, path
+		);
 
-        	rapidjson::Document slackRead;
-        	string buf = beast::buffers_to_string(buffer.data());
-        	slackRead.Parse( buf.c_str() );
+        //Test that connection works by sending a build message. This gets queued until the Slack connection is fully established.
+		handle->send(" { \"channel\" : \"D81AQQPFT\" , \"text\" : \" ESTABLISHED  \" , \"type\" : \"message\" } ");
 
-        	cout << "READ: " << buf << endl << endl;
+        //We could do all sorts here, while the Slack stuff is running async, in the background...
+       	std::cout << "Websocket doing stuff while I send this. Threading magic behold!" << endl;
 
-        	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
-        		// Get the strings
-        		string channel = slackRead["channel"].GetString();
-        		string user = slackRead["user"].GetString();
-        		string text = slackRead["text"].GetString();
-				string event = slackRead["event_ts"].GetString();
-				// Process the strings
-        		if (channel == "CUQV9AGBW" && user == "CMFJQ7NNB") { //Only for Dootbot messages in the #door-status channel
-        			slack::slackDoorbotHandle( text, user, channel, event );
-        		} else {
-        			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
-        			if (text != "") {
-        				cout << "WRITE: " << text << endl << endl;
-        				ws.write(net::buffer(text));
-        			}
-        		}
-        	}
-        	/* TODO: Handle the server calling timeout, reconnect and avoid with ping messages.
-        	 *
-        	 * {"type": "goodbye", "source": "gateway_server"}
-        	 *
-        	 */
-        }
-
-
-
-        // Close the WebSocket connection
-        ws.close(websocket::close_code::normal);
-
-        // If we get here then the connection is closed gracefully
-
-        // The make_printable() function helps print a ConstBufferSequence
-        std::cout << beast::make_printable(buffer.data()) << std::endl; //Message why we closed
-
-
-
-
+       	ioc.run(); //Block until the websockets are closed
+        std::cout << "ASync Finished!" << endl;
 
     }
     catch(std::exception const& e)
