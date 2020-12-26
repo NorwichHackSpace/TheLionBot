@@ -57,7 +57,8 @@ std::string usertoname( std::string user ) ;
 extern rapidjson::Document format; //Set by TheLionBot.cpp, hopefully.
 
 //jokes.cpp
-std::string xmas_joke();
+std::string joke();
+std::string joke_xmas();
 
 //doorbot.cpp
 std::string doorstatus();

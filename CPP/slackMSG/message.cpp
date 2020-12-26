@@ -46,7 +46,7 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 //jokes
 	e = ("([Aa]nother|[Cc]an|[Tt]ell|[Ss]ay|[Gg]ive).*([Jj]oke|[Ff]unny)(| please)(| [Ll]ion)\\W*");
 	if ( regex_match(text , e) ) {
-		string response = slack::xmas_joke();
+		string response = slack::joke();
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}

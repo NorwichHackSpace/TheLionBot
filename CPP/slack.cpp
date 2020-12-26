@@ -280,9 +280,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 			}
 		}
 	} else if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "hello" ) {
-		std::cout << "HELLO."  << std::endl;
 		connected_ = true; //Messages get queued untl Slack confirms that it is ready
-		state_->send(" { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" }");
 	} else if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "goodbye" ) {
 		// Close the WebSocket connection
 		ws_.async_close(websocket::close_code::normal,
