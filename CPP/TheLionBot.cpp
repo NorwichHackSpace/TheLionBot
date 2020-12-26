@@ -68,16 +68,6 @@ int main(int argc, char** argv)
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
 
-
-        /*
-         * Find sending a build message handy for dev work...
-         * Send Percy and #door-status a 'version' alert that we have restarted
-         * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
-         * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
-         * D81AQQPFT is the DM for Alan <--> TheLion
-         */
-        string buildMSG = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
-
         // Launch the asynchronous operation
         auto id = "ws";
         auto const handle = boost::make_shared<shared_state>(id);
@@ -91,11 +81,25 @@ int main(int argc, char** argv)
 				, path
 		);
 
-        //Test that connection works by sending a build message. This gets queued until the Slack connection is fully established.
-		handle->send(" { \"channel\" : \"D81AQQPFT\" , \"text\" : \" ESTABLISHED  \" , \"type\" : \"message\" } ");
+        /*
+         * Find sending a build message handy for dev work...
+         * Send Percy and #door-status a 'version' alert that we have restarted
+         * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
+         * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
+         * D81AQQPFT is the DM for Alan <--> TheLion
+         */
+        string buildMSG = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
+		handle->send(buildMSG); //Add buildMSG to queue, which handle will send when ready.
 
         //We could do all sorts here, while the Slack stuff is running async, in the background...
        	std::cout << "Websocket doing stuff while I send this. Threading magic behold!" << endl;
+
+/*
+       	while (1) {
+       		sleep(120);
+       		do something fancy
+       	}
+*/
 
        	ioc.run(); //Block until the websockets are closed
         std::cout << "ASync Finished!" << endl;
