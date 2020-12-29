@@ -14,6 +14,7 @@
 #include "Passwords.h"
 
 using namespace std;
+using namespace slack;
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -24,12 +25,17 @@ using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 //------------------------------------------------------------------------------
 
-rapidjson::Document slack::format; //Slack info, slack info everywhere!
+rapidjson::Document slack::startJSON; //Slack info, slack info everywhere!
 
 void
 fail(beast::error_code ec, char const* what)
 {
     std::cout << what << ": " << ec.message() << std::endl;
+}
+
+void
+do_slack() {
+
 }
 
 int main(int argc, char** argv)
@@ -38,52 +44,21 @@ int main(int argc, char** argv)
 	try
     {
 
-        /*
-         * To establish a Websocket we first need to request a new token from Slack via rtc.start.
-         * This is then used to form the URL in a new WSS request, instead of upgrading the connection.
-         * Note that we could just use rtc.connect but by using rtc.start, as a bonus, we end up with a JSON
-         * of user and channel details also.
-         */
-
-        slack::format.Parse(slack::HTTP("start").c_str()); //Populate 'format' with data from s Slack Web API call 'start'
-    	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::format["url"].GetString());
-
-    	if (slackWSurl.isValid())
-    	{
-    		cout << "Scheme    : " << slackWSurl.scheme_ << endl;
-    		cout << "Host      : " << slackWSurl.host_ << endl;
-    		cout << "Path      : " << slackWSurl.path_ << endl;
-    		cout << endl;
-    	}
-    	else
-    	{
-    		cout << "URL Parsing error: " << slackWSurl.errorCode_ << endl;
-    	}
-
-        const char * port = "443";
-        string path = "/" + slackWSurl.path_;
-
-        // Now we have the required token with the 'path' we can use that to establish WSS
+        // Launch the asynchronous operation
+        auto id = "ws";
         net::io_context ioc;
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
-
-        // Launch the asynchronous operation
-        auto id = "ws";
         auto const handle = boost::make_shared<shared_state>(id);
         boost::make_shared<ws_session>(
         		  ioc
 				, ctx
 				, handle
-				)->do_start(
-        		slackWSurl.host_
-				, port
-				, path
-		);
+				)->do_start();
 
         /*
          * Find sending a build message handy for dev work...
-         * Send Percy and #door-status a 'version' alert that we have restarted
+         * Send Percy a 'version' alert that we have restarted
          * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
          * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
          * D81AQQPFT is the DM for Alan <--> TheLion
@@ -101,7 +76,21 @@ int main(int argc, char** argv)
        	}
 */
 
-       	ioc.run(); //Block until the websockets are closed
+       	while( 1 ) { //Ugly keep alive stuff
+       		ioc.run(); //Block until the websockets are closed
+            auto id = "ws";
+            net::io_context ioc;
+            ssl::context ctx{ssl::context::tlsv12_client};
+            load_root_certificates(ctx);
+            auto const handle = boost::make_shared<shared_state>(id);
+       		boost::make_shared<ws_session>(
+       			ioc
+				, ctx
+				, handle
+				)->do_start();
+       	}
+
+
         std::cout << "ASync Finished!" << endl;
 
     }

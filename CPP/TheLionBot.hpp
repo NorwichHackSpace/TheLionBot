@@ -21,9 +21,16 @@
 #include <memory>
 #include <string>
 
+#define USER_PERCY "U0V2J8FRA"
+#define DM_PERCY "D81AQQPFT"
+#define CHAN_RANDOM "C0U8Y6BQW"
+#define CHAN_DOORSTATUS "CUQV9AGBW"
+
 #include "LUrlParser/LUrlParser.h"
 
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
+
+#define BUGLINE std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
 
 //Do not add code below this line
 #endif /* CPP_THELIONBOT_HPP_ */

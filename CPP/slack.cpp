@@ -109,31 +109,40 @@ void ws_session::on_write( beast::error_code ec, std::size_t bytes_transferred)
 
 }
 
-void ws_session::do_start( std::string host, char const* port, std::string path) // Start the asynchronous operation
+void ws_session::do_start() // Start the asynchronous operation
 {
-	state_->join(this);  // Add this session to the list of active sessions
-	// Save these for later
-	host_ = host;
-	path_ = path;
-	// Look up the domain name
-	resolver_.async_resolve(
-			host,
-			port,
-			beast::bind_front_handler(
-					&ws_session::on_resolve,
-					shared_from_this()));
-}
+    /*
+     * To establish a Websocket we first need to request a new token from Slack via rtc.start.
+     * This is then used to form the URL in a new WSS request, instead of upgrading the connection.
+     * Note that we could just use rtc.connect but by using rtc.start, as a bonus, we end up with a JSON
+     * of user and channel details also.
+     */
 
-void ws_session::do_start( std::string host, char const* port)
-{
+	slack::startJSON.Parse(slack::HTTP("start").c_str()); //Populate 'startJSON' with data from Slack Web API call 'start'
+	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::startJSON["url"].GetString());
+	if (!slackWSurl.isValid())
+	{
+		//TODO: Throw error instead of cout
+		cout << "URL Parsing error: " << slackWSurl.errorCode_ << endl;
+		return;
+	}
+
+	cout << "Scheme    : " << slackWSurl.scheme_ << endl;
+	cout << "Host      : " << slackWSurl.host_ << endl;
+	cout << "Path      : " << slackWSurl.path_ << endl;
+	cout << endl;
+
 	state_->join(this);  // Add this session to the list of active sessions
-	// Save these for later
-	host_ = host;
-	path_ = "/";
-	// Look up the domain name
+
+	//Copy ParseURL results to ws_session
+    port_ = "443";
+    path_ = "/" + slackWSurl.path_;
+    host_ = slackWSurl.host_;
+
+	//Look up the domain name
 	resolver_.async_resolve(
-			host,
-			port,
+			host_,
+			port_,
 			beast::bind_front_handler(
 					&ws_session::on_resolve,
 					shared_from_this()));
@@ -159,7 +168,6 @@ void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 {
 	if(ec)
 		return fail(ec, "connect");
-
 	// Update the host_ string. This will provide the value of the
 	// Host HTTP header during the WebSocket handshake.
 	// See https://tools.ietf.org/html/rfc7230#section-5.4
@@ -190,16 +198,13 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 {
 	if(ec)
 		return fail(ec, "ssl_handshake");
-
 	// Turn off the timeout on the tcp_stream, because
 	// the websocket stream has its own timeout system.
 	beast::get_lowest_layer(ws_).expires_never();
-
 	// Set suggested timeout settings for the websocket
 	ws_.set_option(
 			websocket::stream_base::timeout::suggested(
 					beast::role_type::client));
-
 	// Set a decorator to change the User-Agent of the handshake
 	ws_.set_option(websocket::stream_base::decorator(
 			[](websocket::request_type& req)
@@ -208,7 +213,6 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 				std::string(BOOST_BEAST_VERSION_STRING) +
 				"websocket-client-async-ssl");
 			}));
-
 	// Perform the websocket handshake
 	ws_.async_handshake(host_, path_,
 			beast::bind_front_handler(
@@ -269,6 +273,18 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		std::string user = slackRead["user"].GetString();
 		std::string text = slackRead["text"].GetString();
 		std::string event = slackRead["event_ts"].GetString();
+
+		//DEBUG STUFF
+		if (text == "lion:reboot" && user == USER_PERCY) {
+			// Close the WebSocket connection
+			ws_.async_close(websocket::close_code::normal,
+					beast::bind_front_handler(
+							&ws_session::on_close,
+							shared_from_this()));
+			return;
+		}
+		//END DEBUG STUFF
+
 		// Process the strings
 		if (channel == "CUQV9AGBW" && user == "CMFJQ7NNB") { //Only for Dootbot messages in the #door-status channel
 			slack::slackDoorbotHandle( text, user, channel, event );
@@ -280,13 +296,21 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 			}
 		}
 	} else if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "hello" ) {
-		connected_ = true; //Messages get queued untl Slack confirms that it is ready
+		connected_ = true; //Messages get queued until Slack confirms that it is ready
+		if (!queue_.empty()) {
+			ws_.async_write(
+				net::buffer(*queue_.front()),
+				beast::bind_front_handler(
+						&ws_session::on_write,
+						shared_from_this()));
+		}
 	} else if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "goodbye" ) {
 		// Close the WebSocket connection
 		ws_.async_close(websocket::close_code::normal,
 				beast::bind_front_handler(
 						&ws_session::on_close,
 						shared_from_this()));
+		return;
 	}
 
 	ws_.async_read(
@@ -301,10 +325,13 @@ void ws_session::on_close(beast::error_code ec)
 	if(ec)
 		return fail(ec, "close");
 
+	state_->leave(this);
+	connected_ = false;
 	// If we get here then the connection is closed gracefully
 
 	// The make_printable() function helps print a ConstBufferSequence
 	std::cout << beast::make_printable(buffer_.data()) << std::endl;
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -376,7 +403,7 @@ string slack::usertoname( string user ) {
 	//
 
 	// else if needs converting
-	for (rapidjson::Value::ConstValueIterator itr = slack::format["users"].Begin(); itr != slack::format["users"].End(); ++itr) { // Ok
+	for (rapidjson::Value::ConstValueIterator itr = slack::startJSON["users"].Begin(); itr != slack::startJSON["users"].End(); ++itr) { // Ok
 	    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
 	    	return (*itr)["profile"]["display_name_normalized"].GetString();
 	    }
