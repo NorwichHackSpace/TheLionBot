@@ -50,11 +50,6 @@ int main(int argc, char** argv)
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
         auto const handle = boost::make_shared<shared_state>(id);
-        boost::make_shared<ws_session>(
-        		  ioc
-				, ctx
-				, handle
-				)->do_start();
 
         /*
          * Find sending a build message handy for dev work...
@@ -63,33 +58,30 @@ int main(int argc, char** argv)
          * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
          * D81AQQPFT is the DM for Alan <--> TheLion
          */
-        string buildMSG = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
-		handle->send(buildMSG); //Add buildMSG to queue, which handle will send when ready.
+        string buildMSG = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
 
-        //We could do all sorts here, while the Slack stuff is running async, in the background...
-       	std::cout << "Websocket doing stuff while I send this. Threading magic behold!" << endl;
-
-/*
+       	bool firstrun = true;
        	while (1) {
-       		sleep(120);
-       		do something fancy
-       	}
-*/
 
-       	while( 1 ) { //Ugly keep alive stuff
-       		ioc.run(); //Block until the websockets are closed
-            auto id = "ws";
-            net::io_context ioc;
-            ssl::context ctx{ssl::context::tlsv12_client};
-            load_root_certificates(ctx);
-            auto const handle = boost::make_shared<shared_state>(id);
        		boost::make_shared<ws_session>(
-       			ioc
-				, ctx
+        		  ioc
+        		, ctx
 				, handle
 				)->do_start();
-       	}
 
+       		if (firstrun) {
+       			handle->send(buildMSG); //Add buildMSG to queue, which handle will send when ready.
+       	       	std::cout << "Websocket doing stuff while I send this. Threading magic behold!" << endl;
+       			firstrun = false;
+       		}
+       		handle->send(" { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"A new connection started. :lion_face: \" , \"type\" : \"message\" } "); //Just for Debug
+
+            //We could do all sorts here, while the Slack stuff is running async, in the background...
+
+       		if (ioc.stopped()) { break; } //Stop on errors, instead of looping though them
+       		ioc.run(); //Block until the websockets are closed
+       		ioc.restart();
+       	}
 
         std::cout << "ASync Finished!" << endl;
 

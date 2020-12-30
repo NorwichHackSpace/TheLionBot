@@ -120,6 +120,7 @@ class shared_state
 
 		void join  (ws_session* shared_session);
 		void leave (ws_session* shared_session);
+		void restart(ws_session* shared_session);
 		void send  (std::string message);
 };
 
@@ -135,14 +136,15 @@ class ws_session : public boost::enable_shared_from_this<ws_session>  //The comp
 		beast::flat_buffer buffer_;
 		std::string host_;
 		std::string path_;
-		const char * port_ = "443";;
-
+		const char * port_ = "443";
+		net::io_context* ioc_;
 		boost::shared_ptr<shared_state> state_;
 		std::vector<boost::shared_ptr<std::string const>> queue_; //Stuff that needs sending
 		bool connected_ = false;
 		bool sending_ = false;
 
 	public:
+
 		ws_session(
 				net::io_context& ioc
 				, ssl::context& ctx
@@ -151,7 +153,7 @@ class ws_session : public boost::enable_shared_from_this<ws_session>  //The comp
 			: resolver_(ioc)
 			, ws_(ioc, ctx)
 			, state_(state)
-		{ }
+		{ ioc_ = &ioc; }
 
 		void send(boost::shared_ptr<std::string const> const& ss);
 		void do_write (boost::shared_ptr<std::string const> const& ss);
