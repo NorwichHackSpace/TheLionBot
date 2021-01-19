@@ -22,6 +22,7 @@ namespace net = boost::asio;            // from <boost/asio.hpp>
 namespace ssl = net::ssl;       // from <boost/asio/ssl.hpp>
 using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
+
 //------------------------------------------------------------------------------
 
 void shared_state::join(ws_session* shared_session)
@@ -106,8 +107,10 @@ void ws_session::on_write( beast::error_code ec, std::size_t bytes_transferred)
 {
 	boost::ignore_unused(bytes_transferred);
 
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "write");
+	}
 
 	// Remove the string from the queue
 	queue_.erase(queue_.begin());
@@ -166,8 +169,10 @@ void ws_session::do_start() // Start the asynchronous operation
 
 void ws_session::on_resolve( beast::error_code ec, tcp::resolver::results_type results)
 {
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "resolve");
+	}
 	BUGLINE
 	// Set a timeout on the operation
 	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
@@ -182,8 +187,11 @@ void ws_session::on_resolve( beast::error_code ec, tcp::resolver::results_type r
 
 void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
 {
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "connect");
+	}
+
 	BUGLINE
 	// Update the host_ string. This will provide the value of the
 	// Host HTTP header during the WebSocket handshake.
@@ -212,8 +220,10 @@ void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 
 void ws_session::on_ssl_handshake(beast::error_code ec)
 {
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "ssl_handshake");
+	}
 	BUGLINE
 	// Turn off the timeout on the tcp_stream, because
 	// the websocket stream has its own timeout system.
@@ -240,8 +250,10 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 
 void ws_session::on_handshake(beast::error_code ec)
 {
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "handshake");
+	}
 	BUGLINE
 	ws_.async_read(
 			buffer_,
@@ -275,8 +287,10 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 
 	boost::ignore_unused(bytes_transferred);
 
-	if(ec)
+	if(ec) {
+		state_->leave(this);
 		return fail(ec, "read");
+	}
 	BUGLINE
 	std::string buf = beast::buffers_to_string(buffer_.data());
 	buffer_.clear();
@@ -294,7 +308,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		std::string event = slackRead["event_ts"].GetString();
 
 		//DEBUG STUFF
-		if (text == "lion:reboot" && user == USER_PERCY) {
+		if (text == "lion:reconnect" && user == USER_PERCY) {
 			//state_->restart(this);
 			//Close the WebSocket connection
 			ws_.async_close(websocket::close_code::normal,
@@ -305,7 +319,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		//END DEBUG STUFF
 
 		// Process the strings
-		if (channel == "CUQV9AGBW" && user == "CMFJQ7NNB") { //Only for Dootbot messages in the #door-status channel
+		if (channel == CHAN_DOORSTATUS && user == USER_DOORBOT) { //Only for Dootbot messages in the #door-status channel
 			slack::slackDoorbotHandle( text, user, channel, event );
 		} else {
 			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
@@ -329,9 +343,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 				beast::bind_front_handler(
 						&ws_session::on_close,
 						shared_from_this()));
-		return;
 	}
-	BUGLINE
 	ws_.async_read(
 			buffer_,
 			beast::bind_front_handler(

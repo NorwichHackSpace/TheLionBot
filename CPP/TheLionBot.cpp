@@ -9,6 +9,7 @@
 
 #include "TheLionBot.hpp"
 #include "slack.hpp"
+#include "database.hpp" //SQLite3
 
 #include <iostream>
 #include "Passwords.h"
@@ -33,11 +34,6 @@ fail(beast::error_code ec, char const* what)
     std::cout << what << ": " << ec.message() << std::endl;
 }
 
-void
-do_slack() {
-
-}
-
 int main(int argc, char** argv)
 {
 	srand(time(0)); // Make our random a new random.
@@ -51,14 +47,6 @@ int main(int argc, char** argv)
         load_root_certificates(ctx);
         auto const handle = boost::make_shared<shared_state>(id);
 
-        /*
-         * Find sending a build message handy for dev work...
-         * Send Percy a 'version' alert that we have restarted
-         * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
-         * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
-         * D81AQQPFT is the DM for Alan <--> TheLion
-         */
-        string buildMSG = " { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
 
        	bool firstrun = true;
        	while (1) {
@@ -70,16 +58,29 @@ int main(int argc, char** argv)
 				)->do_start();
 
        		if (firstrun) {
+       	        /*
+       	         * Find sending a build message handy for dev work...
+       	         * Send Percy a 'version' alert that we have restarted
+       	         * C0U8Y6BQW is the Norwich Hackspace channel ID for #random
+       	         * CUQV9AGBW is the Norwich Hackspace channel ID for #door-status
+       	         * D81AQQPFT is the DM for Alan <--> TheLion
+       	         */
+       			string buildMSG = " { \"channel\" : \"D81AQQPFT\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
        			handle->send(buildMSG); //Add buildMSG to queue, which handle will send when ready.
-       	       	std::cout << "Websocket doing stuff while I send this. Threading magic behold!" << endl;
+       	       	std::cout << "Websocket doing stuff while I cout this. Threading magic behold!" << endl << endl;
        			firstrun = false;
+       		} else {
+       			handle->send(" { \"channel\" : \"D81AQQPFT\" , \"text\" : \"A new connection established. :lion_face: \" , \"type\" : \"message\" } "); //Just for Debug
        		}
-       		handle->send(" { \"channel\" : \"CUQV9AGBW\" , \"text\" : \"A new connection started. :lion_face: \" , \"type\" : \"message\" } "); //Just for Debug
 
             //We could do all sorts here, while the Slack stuff is running async, in the background...
 
-       		if (ioc.stopped()) { break; } //Stop on errors, instead of looping though them
-       		ioc.run(); //Block until the websockets are closed
+       		//ioc.run_for(rel_time);
+       		while (1) {
+       			if (!ioc.run_one() ) { break; } //Stop on errors, instead of looping though them.
+       		}
+
+       		//ioc.run(); //Block until the websockets are closed
        		ioc.restart();
        	}
 

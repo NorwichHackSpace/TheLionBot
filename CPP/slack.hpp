@@ -26,8 +26,6 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -35,8 +33,8 @@
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/system_executor.hpp>
 #include <boost/asio/strand.hpp>
-
-#include "root_certificates.hpp" //Imported from Boost examples, might not be up to date.
+#include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 
 #include <rapidjson/reader.h>
 #include <rapidjson/document.h>

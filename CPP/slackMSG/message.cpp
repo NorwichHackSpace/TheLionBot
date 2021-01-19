@@ -9,6 +9,7 @@
 *******************************************************************************/
 
 #include "../slack.hpp"
+#include "../wiki.hpp"
 #include <regex>
 
 using namespace std;
@@ -17,6 +18,14 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 
 	string JSON = "";
 	regex e;
+
+//Wiki test
+	e = ("(Wiki, Lion.)"); //Be specific for now, this is just for debuggin.
+	if ( regex_match(text , e) ) {
+		string response = wiki::LastEdit();
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		return JSON;
+	}
 
 //random debugging thingy
 	//Based on the repeating responses, it appears the rand() function is very unrandom the way I'm using it.

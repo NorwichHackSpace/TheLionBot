@@ -21,7 +21,10 @@
 #include <memory>
 #include <string>
 
+#include "root_certificates.hpp" //Imported from Boost examples, might not be up to date.
+
 #define USER_PERCY "U0V2J8FRA"
+#define USER_DOORBOT "CMFJQ7NNB"
 #define DM_PERCY "D81AQQPFT"
 #define CHAN_RANDOM "C0U8Y6BQW"
 #define CHAN_DOORSTATUS "CUQV9AGBW"
@@ -30,7 +33,7 @@
 
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
 
-#define BUGLINE std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
+#define BUGLINE //std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
 
 //Do not add code below this line
 #endif /* CPP_THELIONBOT_HPP_ */
