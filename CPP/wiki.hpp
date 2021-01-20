@@ -34,7 +34,6 @@ namespace wiki { //The simple stuff
 	//wiki.cpp
 	std::string HTTP( std::string call ) ;
 	std::string LastEdit( ) ;
-	//extern rapidjson::Document replyJSON;
 
 }
 

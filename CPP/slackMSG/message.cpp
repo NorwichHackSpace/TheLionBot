@@ -22,7 +22,13 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 //Wiki test
 	e = ("(Wiki, Lion.)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
-		string response = wiki::LastEdit();
+		rapidjson::Document replyJSONa;
+		 replyJSONa.Parse( wiki::LastEdit().c_str() );
+		 rapidjson::Value& wiki = replyJSONa["query"]["recentchanges"][0];
+		string type = wiki["type"].GetString();
+		string page = wiki["title"].GetString();
+		string timestamp = wiki["timestamp"].GetString();
+		string response = "Last Wiki " + type + " was on page " + page + " at " + timestamp  + ". \\n ";
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}

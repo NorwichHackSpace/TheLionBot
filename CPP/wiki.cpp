@@ -9,11 +9,6 @@
 
 #include "TheLionBot.hpp"
 #include "wiki.hpp"
-
-
-#include "TheLionBot.hpp"
-#include "slack.hpp"
-
 #include <iostream>
 #include "Passwords.h"
 
@@ -104,15 +99,6 @@ string wiki::HTTP( string call ) {  //TODO: I copied this from the slack.cpp. Ca
 
 }
 
-string wiki::LastEdit( ) {
-	rapidjson::Document replyJSON;
-	cout << wiki::HTTP("action=query&list=recentchanges&rclimit=1").c_str() << std::endl ;
-	replyJSON.Parse(wiki::HTTP("action=query&list=recentchanges&rclimit=1").c_str()); //Populate 'replyJSON' with data from Wiki API call
-	//TODO: Can use a rapidjson can use a pointer reference at  ["query"]["recentchanges"][0]
-	string type = replyJSON["query"]["recentchanges"][0]["type"].GetString();
-	string page = replyJSON["query"]["recentchanges"][0]["title"].GetString();
-	string timestamp = replyJSON["query"]["recentchanges"][0]["timestamp"].GetString();
-	string response = "Last Wiki " + type + " was on page " + page + " at " + timestamp  + ". \\n ";
-	return response; //TODO: Don't use Foo.
-
+std::string wiki::LastEdit( ) {
+	return wiki::HTTP("action=query&list=recentchanges&rclimit=1");
 }

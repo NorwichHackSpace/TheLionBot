@@ -175,10 +175,10 @@ void ws_session::on_resolve( beast::error_code ec, tcp::resolver::results_type r
 	}
 	BUGLINE
 	// Set a timeout on the operation
-	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30)); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
 
 	// Make the connection on the IP address we get from a lookup
-	beast::get_lowest_layer(ws_).async_connect(
+	beast::get_lowest_layer(ws_).async_connect( // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
 			results,
 			beast::bind_front_handler(
 					&ws_session::on_connect,
@@ -198,7 +198,7 @@ void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 	// See https://tools.ietf.org/html/rfc7230#section-5.4
 	host_ += ':' + std::to_string(ep.port());
 	// Set a timeout on the operation
-	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30)); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
 
 	// Set SNI Hostname (many hosts need this to handshake successfully)
 	if(! SSL_set_tlsext_host_name(
@@ -227,7 +227,7 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 	BUGLINE
 	// Turn off the timeout on the tcp_stream, because
 	// the websocket stream has its own timeout system.
-	beast::get_lowest_layer(ws_).expires_never();
+	beast::get_lowest_layer(ws_).expires_never(); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
 	// Set suggested timeout settings for the websocket
 	ws_.set_option(
 			websocket::stream_base::timeout::suggested(
@@ -395,7 +395,7 @@ string slack::HTTP( string call ) {
         }
 
         auto const results = resolver.resolve(host, port);
-        beast::get_lowest_layer(stream).connect(results); //TODO: Find out why this warns in Eclipse
+        beast::get_lowest_layer(stream).connect(results); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
         stream.handshake(ssl::stream_base::client);
         http::request<http::string_body> req{http::verb::get, target, version};
         req.set(http::field::host, host);
