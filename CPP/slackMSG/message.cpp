@@ -20,7 +20,7 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	regex e;
 
 //Wiki test
-	e = ("(Wiki, Lion.)"); //Be specific for now, this is just for debuggin.
+	e = ("(lion:wiki)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
 		rapidjson::Document replyJSONa;
 		 replyJSONa.Parse( wiki::LastEdit().c_str() );
@@ -33,10 +33,19 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 		return JSON;
 	}
 
+//Celebrate an update!
+	e = ("(lion:updatecelebrate)"); //Be specific for now, this is just for showing off.
+	if ( regex_match(text , e) ) {
+		string response = "Rarrrrr! I was freshly groomed " __DATE__ " " __TIME__ "! :lion_face: \\n ";
+		channel = "C0U8Y6ALE"; //Post to #general, regardless of where called
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		return JSON;
+	}
+
 //random debugging thingy
 	//Based on the repeating responses, it appears the rand() function is very unrandom the way I'm using it.
 	//Adding this just while I test just how truly unrandom it is, by seeing how many times certain numbers repeat.
-	e = ("(Give us some random, Lion.)"); //Be specific for now, this is just for debuggin.
+	e = ("(lion:randomtest)"); //Be specific for now, this is just for debuggin.
 	#define NUM_RANDOMS 1000000
 	#define HIGHEST_RANDOM 10
 	if ( regex_match(text , e) ) {

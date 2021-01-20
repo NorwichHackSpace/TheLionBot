@@ -100,5 +100,5 @@ string wiki::HTTP( string call ) {  //TODO: I copied this from the slack.cpp. Ca
 }
 
 std::string wiki::LastEdit( ) {
-	return wiki::HTTP("action=query&list=recentchanges&rclimit=1");
+	return wiki::HTTP("action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp");
 }

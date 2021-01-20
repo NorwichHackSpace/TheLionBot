@@ -7,6 +7,8 @@
  Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
 
+#define WIKI_POLL_SECONDS 20
+
 #include "TheLionBot.hpp"
 #include "slack.hpp"
 #include "wiki.hpp"
@@ -24,15 +26,8 @@ namespace asio = boost::asio;
 
 //------------------------------------------------------------------------------
 
-//Global Uglys
+//**** Global Uglyness ****
 rapidjson::Document slack::startJSON; //Slack info, slack info everywhere!
-
-//Functions for main
-void fail(beast::error_code ec, char const* what)
-{
-    std::cout << what << ": " << ec.message() << std::endl;
-}
-
 
 //Setup shared WS handle
 auto const slackthread = boost::make_shared<shared_state>("ws");
@@ -40,6 +35,13 @@ auto const slackthread = boost::make_shared<shared_state>("ws");
 //Setup timers for API calling globally to allow recursion
 asio::io_context api_io(1);
 asio::deadline_timer wiki_timer(api_io, boost::posix_time::seconds(10)); //Time to first call only
+
+
+//**** Functions for main ****
+void fail(beast::error_code ec, char const* what)
+{
+    std::cout << what << ": " << ec.message() << std::endl;
+}
 
 string wiki_last_edit_time = "";
 void wikitest( const boost::system::error_code& e ) {
@@ -56,17 +58,18 @@ void wikitest( const boost::system::error_code& e ) {
 		wiki_last_edit_time = timestamp;
 		string type = wiki["type"].GetString();
 		string page = wiki["title"].GetString();
+		string user = wiki["user"].GetString();
 		std::replace(page.begin(), page.end(), ' ', '_'); //Need to add underscores for URL
-		string response = "Detected " + type + " of page https:\\/\\/wiki.norwichhackspace.org\\/index.php?title=" + page + " at " + timestamp  + ". \\n ";
+		string response = "Detected " + type + " of page https:\\/\\/wiki.norwichhackspace.org\\/index.php?title=" + page + " at " + timestamp  + ", by " + user + " \\n ";
 		//Wiki Channel = CML8QJ3U3 https://wiki.norwichhackspace.org/index.php?title=
 		slackthread->send(" { \"channel\" : \"CML8QJ3U3\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
 	}
 	//Reschedule
-	wiki_timer.expires_at(wiki_timer.expires_at() + boost::posix_time::seconds(20));
+	wiki_timer.expires_at(wiki_timer.expires_at() + boost::posix_time::seconds(WIKI_POLL_SECONDS));
 	wiki_timer.async_wait(wikitest);
 }
 
-//And obviously, the main function...
+//**** And obviously, the main function... ****
 int main(int argc, char** argv)
 {
 	srand(time(0)); // Make our random a new random.
