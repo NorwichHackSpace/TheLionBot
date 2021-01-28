@@ -305,10 +305,10 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		std::string channel = slackRead["channel"].GetString();
 		std::string user = slackRead["user"].GetString();
 		std::string text = slackRead["text"].GetString();
-		std::string event = slackRead["event_ts"].GetString();
+		std::string event = slackRead["ts"].GetString();
 
 		//DEBUG STUFF
-		if (text == "lion:reconnect" && user == USER_PERCY) {
+		if (text == "lion:reconnect" && channel == CHAN_LION_STATUS) {
 			//state_->restart(this);
 			//Close the WebSocket connection
 			ws_.async_close(websocket::close_code::normal,

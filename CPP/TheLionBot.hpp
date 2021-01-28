@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <boost/bind.hpp>
 
 #include "root_certificates.hpp" //Imported from Boost examples, might not be up to date.
 
@@ -28,6 +29,7 @@
 #define DM_PERCY "D81AQQPFT"
 #define CHAN_RANDOM "C0U8Y6BQW"
 #define CHAN_DOORSTATUS "CUQV9AGBW"
+#define CHAN_LION_STATUS "C01KZGJQ9NH"
 
 #include "LUrlParser/LUrlParser.h"
 

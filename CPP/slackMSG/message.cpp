@@ -8,13 +8,14 @@
 
 *******************************************************************************/
 
+#include "../TheLionBot.hpp"
 #include "../slack.hpp"
 #include "../wiki.hpp"
 #include <regex>
 
 using namespace std;
 
-string slack::slackMsgHandle( string text, string user, string channel, string event_ts ) {
+string slack::slackMsgHandle( string text, string user, string channel, string event ) {
 
 	string JSON = "";
 	regex e;
@@ -80,7 +81,9 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	e = ("[wW]ho(\\s|m\\s)am [Ii][?.\\n]");
 	if ( regex_match(text , e) ) {
 		string response = slack::whoami(user);
-		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		//JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		//Made a threaded response
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" , \"thread_ts\" : \"" + event + "\" } " ;
 		return JSON;
 	}
 
@@ -148,8 +151,4 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 return JSON;
 }
 
-string idle_responses[] = {
-		"In the hackspace, the Norwich hackspace \n The lion sleeps tonight \n Wee heeheehee weeoh aweem away \n Wee heeheehee weeoh aweem away \n",
-		"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?"
-		"Think I just saw a tumble weed."
-};
+
