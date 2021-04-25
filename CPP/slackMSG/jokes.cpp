@@ -53,7 +53,7 @@ std::string slack::joke_xmas( ) {
 			"What do frogs wear on their feet? Open toad sandles",
 			"Why are pirates called pirates? Because they arrrrrrr!",
 			"What do you call a blind reindeer? No-eye deer",
-			"What’s round and bad tempered? A vicious circle",
+			"What’s round and bad tempered? A vicious circle"
 	};
 	int size = ((&responses)[1] - responses);
 	string response = responses[jokes.sequence(size)];
@@ -88,6 +88,7 @@ std::string slack::joke( ) {
 			, "What did the shark say when he ate the clownfish?    This tastes a little funny."
 			, "I waited all night to see where the sun would rise… And then it dawned on me."
 			, "What did the pirate say when he turned 80?   Aye matey."
+			, "Why did the lion cross the road?  To catch the chicken." //Submitted by Nicolas and Marion
 	};
 	int size = ((&responses)[1] - responses);
 	string response = responses[jokes.sequence(size)];

@@ -71,7 +71,6 @@ namespace slack { //The simple stuff
 
 	std::string slackMsgHandle( std::string text, std::string user, std::string channel, std::string event_ts );
 	void slackDoorbotHandle( std::string text, std::string user, std::string channel, std::string event_ts );
-	void idlepost( const boost::system::error_code& e );
 
 }
 

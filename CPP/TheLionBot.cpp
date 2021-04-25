@@ -8,17 +8,17 @@
 *******************************************************************************/
 
 #define WIKI_POLL_TIME boost::posix_time::seconds(20)
-#define IDLE_TIMEOUT boost::posix_time::hours(10)
+#define IDLE_TIMEOUT boost::posix_time::seconds(20)
 
 #include "TheLionBot.hpp"
 #include "slack.hpp"
 #include "wiki.hpp"
 #include "database.hpp" //SQLite3
 
+#include "Passwords.h" //TODO: Move contents to SimpleIni.h
+
 #include <iostream>
 #include <thread>
-
-#include "Passwords.h"
 
 using namespace std;
 using namespace slack;
@@ -34,8 +34,8 @@ auto const slackthread = boost::make_shared<shared_state>("ws");
 
 //Setup timers for API calling globally to allow recursion
 asio::io_context api_io(1);
-asio::deadline_timer wiki_timer(api_io, WIKI_POLL_TIME); //Time to first call only
-asio::deadline_timer idle_timer(api_io, IDLE_TIMEOUT); //Time to first call only
+asio::deadline_timer wiki_timer(api_io, WIKI_POLL_TIME);
+asio::deadline_timer idle_timer(api_io, IDLE_TIMEOUT);
 
 //**** Functions for main ****
 void fail(beast::error_code ec, char const* what)
@@ -65,24 +65,27 @@ void wikitest( const boost::system::error_code& e ) {
 		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
 	}
 	//Reschedule
-	wiki_timer.expires_at(wiki_timer.expires_at() + WIKI_POLL_TIME);
+	idle_timer.expires_from_now( WIKI_POLL_TIME );
 	wiki_timer.async_wait(wikitest);
 }
-
-void slack::idlepost( const boost::system::error_code& e ) {
+//void idlepost( const boost::system::error_code& e );
+void idlepost( const boost::system::error_code& e ) {
 	//Check
 	if( e ) return; // we were cancelled
 	//Do
 	string responses[] = {
 			"In the Hackspace, the Norwich Hackspace \\n The lion sleeps tonight \\n Wee heeheehee weeoh aweem away \\n Wee heeheehee weeoh aweem away \\n",
 			"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?",
-			"Think I just saw a tumble weed."
+			"Think I just saw a tumble weed.",
+			"I have so much rraw. And nothing to do.",
+			"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here."
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
+	std::cout << "DEBUG: Idle Called" << endl;
 	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 	//Reschedule
-	idle_timer.expires_at(idle_timer.expires_at() + IDLE_TIMEOUT);
+	idle_timer.expires_from_now( IDLE_TIMEOUT );
 	idle_timer.async_wait(idlepost);
 }
 
@@ -90,6 +93,9 @@ void slack::idlepost( const boost::system::error_code& e ) {
 int main(int argc, char** argv)
 {
 	srand(time(0)); // Make our random a new random.
+
+	database::open() ;
+
 	try
     {
         // Launch the Slack asynchronous operation
@@ -125,21 +131,17 @@ int main(int argc, char** argv)
        			}};
        			api_call.detach();
        		} else {
-       			slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"A new connection established. :lion_face: \" , \"type\" : \"message\" } "); //Just for Debug
+       			//slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"A new connection established. :lion_face: \" , \"type\" : \"message\" } "); //Just for Debug
+       			std::cout << "A new connection established " << endl;
        		}
-
-       		slack_io.run_for(std::chrono::seconds(1)); //Block while Slack connection settles
-
-
-   			//api_call.join();  //This blocks the Slack thread!
 
        		while ( slack_io.run_one() ) { //Stop if the Slack websocket breaks.
        			/*
        			 * Anything here will effect Slack responsiveness, but if it's quick probably won't get noticed.
        			 * One completion of the loop occurs each time Slack IO does something - most likely a user sent a message.
-       			 * It might even be better to just forgo the while() and just call slack_io.run() as a blocking call.
        			 */
-       			idle_timer.expires_at(idle_timer.expires_at() + IDLE_TIMEOUT); //Something happened, so no idle.
+       			//idle_timer.expires_from_now( IDLE_TIMEOUT ); //Something happened, so reset idle time.
+       			//std::cout << "DEBUG: Idle Reset!" << endl;
        		}
 
        		slack_io.restart(); //Make sure we start a new connection and don't try to reestablish the old one.
@@ -151,7 +153,7 @@ int main(int argc, char** argv)
     catch(std::exception const& e)
     {
         std::cerr << "Error: " << e.what() << std::endl;
-        return EXIT_FAILURE;
+        return EXIT_FAILURE; //C++ Shrugs.
     }
 
     return EXIT_SUCCESS;

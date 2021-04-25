@@ -369,14 +369,23 @@ void ws_session::on_close(beast::error_code ec)
 //////////////////////////////////////////////////////////////////////
 
 string slack::HTTP( string call ) {
-	string token = "Foo";
+	//Get some basic settings from a local configuration file. TODO: You can use argv too!
+	CSimpleIniA settings; settings.SetUnicode();
+   	settings.LoadFile(INI_PATH); //The LoadFile function is surprisingly tolerant if the file doesn't exist, so just continue if not there and make what's missing...
+   		const string slack_token  = settings.GetValue("Slack", "Token", "Unset");
+   		if ( slack_token.empty() || slack_token == "Unset" ) {
+   	        std::cerr << "Error: " << "No Slack token set in conf file." << std::endl;
+   			settings.SetValue("Slack", "Token", "Unset");
+   			settings.SaveFile(INI_PATH); //Write new value to file
+   	        exit(EXIT_FAILURE); //C++ Shrugs.
+   		}
+   		const char * slack_fingerprint  = settings.GetValue("Slack", "FINGERPRINT", SLACK_SSL_FINGERPRINT); // if Slack changes their SSL (SHA1 fingerprint, you would need to update this:
 
     try
     {
         auto const host = "slack.com"; //I doubt Slack will change it's URL.
         auto const port = "443";
-        string token = SLACK_BOT_TOKEN;
-        string target = "/api/rtm." + call + "?token=" + token;
+        string target = "/api/rtm." + call + "?token=" + slack_token;
         int version = 11; //HTTP Version. 1.1 Recommended.
 
         net::io_context ioc;

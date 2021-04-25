@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include CPP/slackMSG/subdir.mk
+-include CPP/simpleini/subdir.mk
 -include CPP/LUrlParser/subdir.mk
 -include CPP/subdir.mk
 -include .metadata/.plugins/org.eclipse.cdt.make.core/subdir.mk

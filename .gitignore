@@ -48,3 +48,7 @@ Passwords.*
 # Also, don't sync the builds until the passwords require an external file
 Debug/TheLionBot
 Release/TheLionBot
+
+Release/slack-stats.db
+
+Release/TheLionBot.conf

@@ -18,8 +18,13 @@ With Debian/Ubuntu you can cheat and do...
 
 `sudo apt install gcc libboost-dev rapidjson-dev libssl-dev libsqlite3-dev`
 
+With a Raspberry Pi, you might need a newer Boost than in the default Repo...
+`git clone --recursive https://github.com/boostorg/boost.git`
+`cd boost`
+`./bootstrap.sh --prefix=/usr`
+`sudo ./b2 install`
+
+
 ## Build Commands
 
-C++ Linker command... 
-
-`g++ -L/usr/local/ssl/include -L/usr/local/ssl/lib -o "TheLionBot"  ./CPP/TheLionBot.o   -lssl -lpthread -lcrypto -lsqlite3`
+You probably want the `cd /release/` and `make`.
