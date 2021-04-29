@@ -8,7 +8,7 @@
 *******************************************************************************/
 
 #include "TheLionBot.hpp"
-#include "wiki.hpp"
+#include "fetch.hpp"
 #include <iostream>
 
 using namespace std;
@@ -20,29 +20,13 @@ namespace net = boost::asio;            // from <boost/asio.hpp>
 namespace ssl = net::ssl;       // from <boost/asio/ssl.hpp>
 using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
-
-
-//Not using Passwords.h yet, but probably needed if we need to write to the Wiki
-//#include "Passwords.h"
-
 using namespace std;
 
-namespace beast = boost::beast;         // from <boost/beast.hpp>
-namespace http = beast::http;           // from <boost/beast/http.hpp>
-namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
-namespace net = boost::asio;            // from <boost/asio.hpp>
-namespace ssl = net::ssl;       // from <boost/asio/ssl.hpp>
-using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
-
-
-string wiki::HTTP( string call ) {  //TODO: I copied this from the slack.cpp. Can probably make a single function for both cases with host + target given in func call
-	string token = "Foo";
+string fetch::https ( const char * const host, const char * const target, const char * const port ) {
 
     try
     {
-        auto const host = "wiki.norwichhackspace.org"; //Unlikely to change?
-        auto const port = "443";
-        string target = "/api.php?format=json&" + call ;
+
         int version = 11; //HTTP Version. 1.1 Recommended.
 
         net::io_context ioc;
@@ -64,7 +48,7 @@ string wiki::HTTP( string call ) {  //TODO: I copied this from the slack.cpp. Ca
         }
 
         auto const results = resolver.resolve(host, port);
-        beast::get_lowest_layer(stream).connect(results); //TODO: Find out why this warns in Eclipse
+        beast::get_lowest_layer(stream).connect(results); //TODO: Find out why this warns in Eclipse // @suppress("Method cannot be resolved") // @suppress("Invalid arguments")
         stream.handshake(ssl::stream_base::client);
         http::request<http::string_body> req{http::verb::get, target, version};
         req.set(http::field::host, host);
@@ -96,8 +80,4 @@ string wiki::HTTP( string call ) {  //TODO: I copied this from the slack.cpp. Ca
         return "Failed"; //TODO: Probably want to handle gracefully.
     }
 
-}
-
-std::string wiki::LastEdit( ) {
-	return wiki::HTTP("action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp");
 }

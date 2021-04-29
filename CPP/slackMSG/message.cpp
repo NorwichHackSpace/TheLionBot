@@ -10,8 +10,8 @@
 
 #include "../TheLionBot.hpp"
 #include "../slack.hpp"
-#include "../wiki.hpp"
 #include <regex>
+#include "../fetch.hpp"
 
 using namespace std;
 
@@ -24,7 +24,11 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	e = ("(lion:wiki)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
 		rapidjson::Document replyJSONa;
-		 replyJSONa.Parse( wiki::LastEdit().c_str() );
+		 std::string LastEdit = fetch::https(
+				 "wiki.norwichhackspace.org",
+				 "/api.php?format=json&action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp"
+		);
+		 replyJSONa.Parse( LastEdit.c_str() );
 		 rapidjson::Value& wiki = replyJSONa["query"]["recentchanges"][0];
 		string type = wiki["type"].GetString();
 		string page = wiki["title"].GetString();

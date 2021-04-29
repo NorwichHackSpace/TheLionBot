@@ -300,7 +300,12 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 	std::cout << "READ: " << buf << std::endl << std::endl;
 
 	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
-		//idle_timer.expires_from_now( IDLE_TIMEOUT ); //Something happened, so reset idle time.
+
+		int slack_timeout = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
+		idle_timer.expires_from_now(
+				boost::posix_time::minutes(slack_timeout)
+		);
+
 		// Get the strings
 		std::string channel = slackRead["channel"].GetString();
 		std::string user = slackRead["user"].GetString();
@@ -309,7 +314,6 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 
 		//DEBUG STUFF
 		if (text == "lion:reconnect" && channel == CHAN_LION_STATUS) {
-			//state_->restart(this);
 			//Close the WebSocket connection
 			ws_.async_close(websocket::close_code::normal,
 					beast::bind_front_handler(

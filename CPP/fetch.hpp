@@ -1,6 +1,6 @@
 /*******************************************************************************
  The Lion: Norwich Hackspace's very own bot for Slack and Lion House automation
- Name        : wiki.hpp
+ Name        : fetch.hpp
  Authors     : Alan Percy Childs
  Version     :
  *******************************************************************************/
@@ -12,8 +12,8 @@
    In the appropriate sections
  */
 
-#ifndef WIKI_HPP_
-#define WIKI_HPP_
+#ifndef FETCH_HPP_
+#define FETCH_HPP_
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -29,13 +29,13 @@
 #include <rapidjson/reader.h>
 #include <rapidjson/document.h>
 
-namespace wiki { //The simple stuff
+namespace fetch { //The simple stuff
 
-	//wiki.cpp
-	std::string HTTP( std::string call ) ;
-	std::string LastEdit( ) ;
+	//fetch.cpp
+	//std::string http( const char* host, const char* target, const char* port = "80" );
+	std::string https( const char* host, const char* target, const char* port = "443" );
 
 }
 
 //Do not add code below this line
-#endif /* WIKI_HPP_ */
+#endif /* FETCH_HPP_ */

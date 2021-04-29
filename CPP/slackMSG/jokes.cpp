@@ -9,6 +9,7 @@
 *******************************************************************************/
 
 #include "../slack.hpp"
+#include "../fetch.hpp"
 #include <regex>
 
 using namespace std;
@@ -61,7 +62,22 @@ std::string slack::joke_xmas( ) {
 };
 
 std::string slack::joke( ) {
-	//TODO: Call a Chuck Norris joke from http://www.icndb.com/api/ and convert it to Nicolas Cage joke.
+
+	//Nicolas Cage jokes requested by Dan R
+	if (rand() % 2) { //50% odds
+		//fetch
+		std::string res = fetch::https(
+					 "api.icndb.com",
+					 "/jokes/random/?firstName=Nicolas&lastName=Cage&exclude=[explicit]"
+			);
+		//Do
+		rapidjson::Document replyJSON;
+		 replyJSON.Parse( res.c_str() );
+		 string NicolasCage = replyJSON["value"]["joke"].GetString();
+		srand(time(0));
+		if ( !(NicolasCage == "") ) { return NicolasCage; }
+	}
+
 	string responses[] = {
 			"Knock! Knock! Who's there? Dejav. Dejav who? Knock! Knock!  "
 			, "Knock! Knock! Who's there? Oink oink. Oink oink who? Make up your mind—are you a pig, or an owl?!"

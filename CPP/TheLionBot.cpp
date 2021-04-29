@@ -7,12 +7,11 @@
  Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
 
-#define WIKI_POLL_TIME boost::posix_time::seconds(20)
-#define IDLE_TIMEOUT boost::posix_time::hours(8)
+//Defaults
 
 #include "TheLionBot.hpp"
 #include "slack.hpp"
-#include "wiki.hpp"
+#include "fetch.hpp"
 #include "database.hpp" //SQLite3
 
 #include <iostream>
@@ -33,8 +32,8 @@ auto const slackthread = boost::make_shared<shared_state>("ws");
 
 //Setup timers for API calling globally to allow recursion
 asio::io_context api_io(1);
-asio::deadline_timer wiki_timer(api_io, WIKI_POLL_TIME);
-asio::deadline_timer idle_timer(api_io, IDLE_TIMEOUT);
+asio::deadline_timer wiki_timer(api_io);
+asio::deadline_timer idle_timer(api_io);
 
 //**** Functions for main ****
 void fail(beast::error_code ec, char const* what)
@@ -45,10 +44,17 @@ void fail(beast::error_code ec, char const* what)
 string wiki_last_edit_time = "";
 void wikitest( const boost::system::error_code& e ) {
 	//Check
-	if( e ) return; // we were cancelled
+	if( e ) {
+		wiki_timer.async_wait(wikitest);
+		return; // we were cancelled
+	}
 	//Do
 	rapidjson::Document replyJSON;
-	 replyJSON.Parse( wiki::LastEdit().c_str() );
+	 std::string LastEdit = fetch::https(
+			 "wiki.norwichhackspace.org",
+			 "/api.php?format=json&action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp"
+	);
+	 replyJSON.Parse( LastEdit.c_str() );
 	 rapidjson::Value& wiki = replyJSON["query"]["recentchanges"][0];
 	string timestamp = wiki["timestamp"].GetString();
 	if (wiki_last_edit_time == "") { //First time running
@@ -63,12 +69,17 @@ void wikitest( const boost::system::error_code& e ) {
 		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
 	}
 	//Reschedule
-	wiki_timer.expires_from_now( WIKI_POLL_TIME );
+	int poll_time = std::stoi( settings.GetValue("Wiki", "PollTime", WIKI_POLL) );
+	wiki_timer.expires_from_now( boost::posix_time::seconds(poll_time) );
 	wiki_timer.async_wait(wikitest);
 }
 void idlepost( const boost::system::error_code& e ) {
 	//Check
-	if( e ) return; // we were cancelled
+	if( e )
+	{
+		idle_timer.async_wait(idlepost);
+		return; // we were cancelled
+	}
 	//Do
 	string responses[] = {
 			"In the Hackspace, the Norwich Hackspace \\n The lion sleeps tonight \\n Wee heeheehee weeoh aweem away \\n Wee heeheehee weeoh aweem away \\n",
@@ -77,16 +88,16 @@ void idlepost( const boost::system::error_code& e ) {
 			"I have so much rraw. And nothing to do.",
 			"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here.",
 			":notes: Hakuna Matata :notes:",
-			":lion_face: :fire: I laugh in the face of danger.",
+			"Rule Zero? :fire: I laugh in the face of danger. :lion_face:",
 			"Oh yes, the past can hurt. But from the way I see it, you can either run from it, or learn from it.",
 			"Believe in yourself and there will come a day when others will have no choice but to believe with you."
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	std::cout << "DEBUG: Idle Called" << endl;
 	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 	//Reschedule
-	idle_timer.expires_from_now( IDLE_TIMEOUT );
+	int time_out = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
+	idle_timer.expires_from_now( boost::posix_time::minutes(time_out) );
 	idle_timer.async_wait(idlepost);
 }
 
@@ -94,7 +105,6 @@ void loadSettings() {
 	//Get some basic settings from a local configuration file. TODO: You can use argv too!
 	settings.SetUnicode();
    	settings.LoadFile(INI_PATH); //The LoadFile function is surprisingly tolerant if the file doesn't exist, so just continue if not there and make what's missing...
-
 }
 
 //**** And obviously, the main function... ****
@@ -133,7 +143,10 @@ int main(int argc, char** argv)
        			firstrun = false;
        			//Start the timer operations and split onto another thread, keeping Slack IO responsive.
        			std::thread api_call{[](){
+       				wiki_timer.expires_from_now( boost::posix_time::seconds(1) );
        				wiki_timer.async_wait( wikitest ); //Recursive
+       				int slack_timeout = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
+       				idle_timer.expires_from_now( boost::posix_time::minutes(slack_timeout) );
        				idle_timer.async_wait( idlepost ); //Recursive
        				api_io.run();
        			}};
@@ -143,13 +156,14 @@ int main(int argc, char** argv)
        			std::cout << "A new connection established " << endl;
        		}
 
-       		while ( slack_io.run_one() ) { //Stop if the Slack websocket breaks.
+       		slack_io.run();
+
+//       		while ( slack_io.run_one() ) { //Stop if the Slack websocket breaks.
        			/*
        			 * Anything here will effect Slack responsiveness, but if it's quick probably won't get noticed.
        			 * One completion of the loop occurs each time Slack IO does something - most likely a user sent a message.
        			 */
-       			idle_timer.expires_from_now( IDLE_TIMEOUT ); idle_timer.async_wait(idlepost); //Something happened, so reset idle time.
-       		}
+//       		}
 
        		slack_io.restart(); //Make sure we start a new connection and don't try to reestablish the old one.
        	}

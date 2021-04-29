@@ -28,6 +28,9 @@
 
 #define INI_PATH "TheLionBot.conf"
 
+#define SLACK_TIMEOUT "30" //Seconds
+#define WIKI_POLL "420" //Minutes (420 Mins = 7 Hours)
+
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
 
 #define BUGLINE //std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
@@ -39,8 +42,11 @@
 #define CHAN_DOORSTATUS "CUQV9AGBW"
 #define CHAN_LION_STATUS "C01KZGJQ9NH"
 #define CHAN_WIKI "CML8QJ3U3"
+#define CHAN_GENERAL "C0U8Y6ALE"
 
 extern CSimpleIniA settings;
+
+extern boost::asio::deadline_timer idle_timer;
 
 //Do not add code below this line
 #endif /* CPP_THELIONBOT_HPP_ */
