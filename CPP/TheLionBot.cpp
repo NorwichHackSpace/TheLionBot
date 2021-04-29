@@ -8,14 +8,12 @@
 *******************************************************************************/
 
 #define WIKI_POLL_TIME boost::posix_time::seconds(20)
-#define IDLE_TIMEOUT boost::posix_time::seconds(20)
+#define IDLE_TIMEOUT boost::posix_time::hours(8)
 
 #include "TheLionBot.hpp"
 #include "slack.hpp"
 #include "wiki.hpp"
 #include "database.hpp" //SQLite3
-
-#include "Passwords.h" //TODO: Move contents to SimpleIni.h
 
 #include <iostream>
 #include <thread>
@@ -28,6 +26,7 @@ namespace asio = boost::asio;
 
 //**** Global Uglyness ****
 rapidjson::Document slack::startJSON; //Slack info, slack info everywhere!
+CSimpleIniA settings;
 
 //Setup shared WS handle
 auto const slackthread = boost::make_shared<shared_state>("ws");
@@ -61,14 +60,12 @@ void wikitest( const boost::system::error_code& e ) {
 		string user = wiki["user"].GetString();
 		std::replace(page.begin(), page.end(), ' ', '_'); //Need to add underscores for URL
 		string response = "Detected " + type + " of page https:\\/\\/wiki.norwichhackspace.org\\/index.php?title=" + page + " at " + timestamp  + ", by " + user + " \\n ";
-		//Wiki Channel = CML8QJ3U3 https://wiki.norwichhackspace.org/index.php?title=
 		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
 	}
 	//Reschedule
-	idle_timer.expires_from_now( WIKI_POLL_TIME );
+	wiki_timer.expires_from_now( WIKI_POLL_TIME );
 	wiki_timer.async_wait(wikitest);
 }
-//void idlepost( const boost::system::error_code& e );
 void idlepost( const boost::system::error_code& e ) {
 	//Check
 	if( e ) return; // we were cancelled
@@ -78,7 +75,11 @@ void idlepost( const boost::system::error_code& e ) {
 			"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?",
 			"Think I just saw a tumble weed.",
 			"I have so much rraw. And nothing to do.",
-			"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here."
+			"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here.",
+			":notes: Hakuna Matata :notes:",
+			":lion_face: :fire: I laugh in the face of danger.",
+			"Oh yes, the past can hurt. But from the way I see it, you can either run from it, or learn from it.",
+			"Believe in yourself and there will come a day when others will have no choice but to believe with you."
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
@@ -89,12 +90,21 @@ void idlepost( const boost::system::error_code& e ) {
 	idle_timer.async_wait(idlepost);
 }
 
+void loadSettings() {
+	//Get some basic settings from a local configuration file. TODO: You can use argv too!
+	settings.SetUnicode();
+   	settings.LoadFile(INI_PATH); //The LoadFile function is surprisingly tolerant if the file doesn't exist, so just continue if not there and make what's missing...
+
+}
+
 //**** And obviously, the main function... ****
 int main(int argc, char** argv)
 {
 	srand(time(0)); // Make our random a new random.
 
-	database::open() ;
+	loadSettings();
+
+   	database::open() ;
 
 	try
     {
@@ -102,8 +112,6 @@ int main(int argc, char** argv)
         net::io_context slack_io;
         ssl::context ctx{ssl::context::tlsv12_client};
         load_root_certificates(ctx);
-        //auto id = "ws";
-        //auto const slackthread = boost::make_shared<shared_state>(id);
 
         //State flags
        	bool firstrun = true;
@@ -140,8 +148,7 @@ int main(int argc, char** argv)
        			 * Anything here will effect Slack responsiveness, but if it's quick probably won't get noticed.
        			 * One completion of the loop occurs each time Slack IO does something - most likely a user sent a message.
        			 */
-       			//idle_timer.expires_from_now( IDLE_TIMEOUT ); //Something happened, so reset idle time.
-       			//std::cout << "DEBUG: Idle Reset!" << endl;
+       			idle_timer.expires_from_now( IDLE_TIMEOUT ); idle_timer.async_wait(idlepost); //Something happened, so reset idle time.
        		}
 
        		slack_io.restart(); //Make sure we start a new connection and don't try to reestablish the old one.

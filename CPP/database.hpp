@@ -15,10 +15,9 @@
 #include <sqlite3.h> //Main import!
 
 //Nothing to see here
-class database {
+namespace database {
 
-	public:
-		static void open() {
+		void open() {
 			   sqlite3 *db;
 			   int rc;
 			   rc = sqlite3_open("slack-stats.db", &db);
@@ -29,10 +28,6 @@ class database {
 			   }
 			   sqlite3_close(db);
 		}
-
-
-	private:
-
 
 };
 

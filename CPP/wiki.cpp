@@ -10,7 +10,6 @@
 #include "TheLionBot.hpp"
 #include "wiki.hpp"
 #include <iostream>
-#include "Passwords.h"
 
 using namespace std;
 

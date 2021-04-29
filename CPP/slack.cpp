@@ -11,7 +11,6 @@
 #include "slack.hpp"
 
 #include <iostream>
-#include "Passwords.h"
 
 using namespace std;
 
@@ -301,6 +300,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 	std::cout << "READ: " << buf << std::endl << std::endl;
 
 	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
+		//idle_timer.expires_from_now( IDLE_TIMEOUT ); //Something happened, so reset idle time.
 		// Get the strings
 		std::string channel = slackRead["channel"].GetString();
 		std::string user = slackRead["user"].GetString();
@@ -369,17 +369,15 @@ void ws_session::on_close(beast::error_code ec)
 //////////////////////////////////////////////////////////////////////
 
 string slack::HTTP( string call ) {
-	//Get some basic settings from a local configuration file. TODO: You can use argv too!
-	CSimpleIniA settings; settings.SetUnicode();
-   	settings.LoadFile(INI_PATH); //The LoadFile function is surprisingly tolerant if the file doesn't exist, so just continue if not there and make what's missing...
-   		const string slack_token  = settings.GetValue("Slack", "Token", "Unset");
-   		if ( slack_token.empty() || slack_token == "Unset" ) {
-   	        std::cerr << "Error: " << "No Slack token set in conf file." << std::endl;
-   			settings.SetValue("Slack", "Token", "Unset");
-   			settings.SaveFile(INI_PATH); //Write new value to file
-   	        exit(EXIT_FAILURE); //C++ Shrugs.
-   		}
-   		const char * slack_fingerprint  = settings.GetValue("Slack", "FINGERPRINT", SLACK_SSL_FINGERPRINT); // if Slack changes their SSL (SHA1 fingerprint, you would need to update this:
+
+	string slack_token = settings.GetValue("Slack", "Token", "Unset");
+	if ( slack_token.empty() || slack_token == "Unset" ) {
+	    std::cerr << "Error: " << "No Slack token set in conf file." << std::endl;
+		settings.SetValue("Slack", "Token", "Unset");
+		settings.SaveFile(INI_PATH); //Write new value to file
+	    exit(EXIT_FAILURE);
+	}
+	string slack_fingerprint = settings.GetValue("Slack", "FINGERPRINT", "AC 95 5A 58 B8 4E 0B CD B3 97 D2 88 68 F5 CA C1 0A 81 E3 6E"); // if Slack changes their SSL (SHA1 fingerprint, you would need to update this:
 
     try
     {
