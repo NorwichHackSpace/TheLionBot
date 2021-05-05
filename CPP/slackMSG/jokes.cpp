@@ -9,8 +9,8 @@
 *******************************************************************************/
 
 #include "../slack.hpp"
-#include "../fetch.hpp"
 #include <regex>
+#include "../rest.hpp"
 
 using namespace std;
 

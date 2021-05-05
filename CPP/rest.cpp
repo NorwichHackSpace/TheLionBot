@@ -7,8 +7,9 @@
  Disclaimer  : Any resemblance to actual robots would be really cool
 *******************************************************************************/
 
+#include "rest.hpp"
+
 #include "TheLionBot.hpp"
-#include "fetch.hpp"
 #include <iostream>
 
 using namespace std;

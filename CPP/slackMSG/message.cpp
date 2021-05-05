@@ -10,10 +10,15 @@
 
 #include "../TheLionBot.hpp"
 #include "../slack.hpp"
+#include "../rest.hpp"
+#include "../database.hpp"
 #include <regex>
-#include "../fetch.hpp"
 
 using namespace std;
+
+/*
+ * Slack     : READ: {"type":"message","subtype":"channel_join","user":"U020SHRDQ2E","text":"<@U020SHRDQ2E> has joined the channel","team":"T0U7PLNEP","channel":"C0U8Y6ALE","event_ts":"1620143115.481200","ts":"1620143115.481200"}
+ */
 
 string slack::slackMsgHandle( string text, string user, string channel, string event ) {
 
@@ -24,8 +29,9 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	e = ("(lion:wiki)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
 		rapidjson::Document replyJSONa;
+		const char * wiki_URL = settings.GetValue("Wiki", "URL", "wiki.norwichhackspace.org");
 		 std::string LastEdit = fetch::https(
-				 "wiki.norwichhackspace.org",
+				 wiki_URL,
 				 "/api.php?format=json&action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp"
 		);
 		 replyJSONa.Parse( LastEdit.c_str() );
@@ -39,10 +45,9 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	}
 
 //Celebrate an update!
-	e = ("(lion:updatecelebrate)"); //Be specific for now, this is just for showing off.
+	e = ("(lion:version)"); //Be specific for now, this is just for showing off.
 	if ( regex_match(text , e) ) {
 		string response = "Rarrrrr! I was freshly groomed " __DATE__ " " __TIME__ "! :lion_face: \\n ";
-		channel = "C0U8Y6ALE"; //Post to #general, regardless of where called
 		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
 		return JSON;
 	}

@@ -156,7 +156,7 @@ void ws_session::do_start() // Start the asynchronous operation
     port_ = "443";
     path_ = "/" + slackWSurl.path_;
     host_ = slackWSurl.host_;
-    BUGLINE
+
 	//Look up the domain name
 	resolver_.async_resolve(
 			host_,
@@ -172,7 +172,7 @@ void ws_session::on_resolve( beast::error_code ec, tcp::resolver::results_type r
 		state_->leave(this);
 		return fail(ec, "resolve");
 	}
-	BUGLINE
+
 	// Set a timeout on the operation
 	beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30)); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
 
@@ -191,7 +191,6 @@ void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 		return fail(ec, "connect");
 	}
 
-	BUGLINE
 	// Update the host_ string. This will provide the value of the
 	// Host HTTP header during the WebSocket handshake.
 	// See https://tools.ietf.org/html/rfc7230#section-5.4
@@ -208,7 +207,7 @@ void ws_session::on_connect(beast::error_code ec, tcp::resolver::results_type::e
 				net::error::get_ssl_category());
 		return fail(ec, "connect");
 	}
-	BUGLINE
+
 	// Perform the SSL handshake
 	ws_.next_layer().async_handshake(
 			ssl::stream_base::client,
@@ -223,7 +222,6 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 		state_->leave(this);
 		return fail(ec, "ssl_handshake");
 	}
-	BUGLINE
 	// Turn off the timeout on the tcp_stream, because
 	// the websocket stream has its own timeout system.
 	beast::get_lowest_layer(ws_).expires_never(); // @suppress("Invalid arguments") // @suppress("Method cannot be resolved")
@@ -239,7 +237,6 @@ void ws_session::on_ssl_handshake(beast::error_code ec)
 				std::string(BOOST_BEAST_VERSION_STRING) +
 				"websocket-client-async-ssl");
 			}));
-	BUGLINE
 	// Perform the websocket handshake
 	ws_.async_handshake(host_, path_,
 			beast::bind_front_handler(
@@ -253,7 +250,6 @@ void ws_session::on_handshake(beast::error_code ec)
 		state_->leave(this);
 		return fail(ec, "handshake");
 	}
-	BUGLINE
 	ws_.async_read(
 			buffer_,
 			beast::bind_front_handler(
@@ -263,7 +259,6 @@ void ws_session::on_handshake(beast::error_code ec)
 
 void ws_session::do_listen()
 {
-	BUGLINE
 	ws_.async_read(
 			buffer_,
 			beast::bind_front_handler(
@@ -290,14 +285,13 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		state_->leave(this);
 		return fail(ec, "read");
 	}
-	BUGLINE
 	std::string buf = beast::buffers_to_string(buffer_.data());
 	buffer_.clear();
 
 	rapidjson::Document slackRead;
 	slackRead.Parse( buf.c_str() );
 
-	std::cout << "READ: " << buf << std::endl << std::endl;
+	std::cout << "Slack     : READ: " << buf << std::endl << std::endl;
 
 	if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "message" ) { //Simple first message received
 
@@ -328,7 +322,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		} else {
 			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
 			if (text != "") {
-				std::cout << "WRITE: " << text << std::endl << std::endl;
+				std::cout << "Slack     : WRITE: " << text << std::endl << std::endl;
 				state_->send(text); //Add message to queue
 			}
 		}

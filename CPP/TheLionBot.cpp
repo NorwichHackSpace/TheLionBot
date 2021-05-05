@@ -11,11 +11,11 @@
 
 #include "TheLionBot.hpp"
 #include "slack.hpp"
-#include "fetch.hpp"
 #include "database.hpp" //SQLite3
 
 #include <iostream>
 #include <thread>
+#include "rest.hpp"
 
 using namespace std;
 using namespace slack;
@@ -26,6 +26,7 @@ namespace asio = boost::asio;
 //**** Global Uglyness ****
 rapidjson::Document slack::startJSON; //Slack info, slack info everywhere!
 CSimpleIniA settings;
+sqlite database;
 
 //Setup shared WS handle
 auto const slackthread = boost::make_shared<shared_state>("ws");
@@ -50,8 +51,9 @@ void wikitest( const boost::system::error_code& e ) {
 	}
 	//Do
 	rapidjson::Document replyJSON;
+	const char * wiki_URL = settings.GetValue("Wiki", "URL", "wiki.norwichhackspace.org");
 	 std::string LastEdit = fetch::https(
-			 "wiki.norwichhackspace.org",
+			 wiki_URL,
 			 "/api.php?format=json&action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp"
 	);
 	 replyJSON.Parse( LastEdit.c_str() );
@@ -112,9 +114,11 @@ int main(int argc, char** argv)
 {
 	srand(time(0)); // Make our random a new random.
 
-	loadSettings();
+	loadSettings(); //Load settings from the conf file into 'settings'
 
-   	database::open() ;
+	//Setup all the database tables
+	const char * sql = "CREATE TABLE IF NOT EXISTS whoisin(timeIn TEXT PRIMARY KEY NOT NULL , id TEXT NOT NULL , timeOut TEXT NOT NULL);";
+	database.exec(sql);
 
 	try
     {
@@ -138,7 +142,7 @@ int main(int argc, char** argv)
        		//Slack connection can now be called globally.
 
        		if (firstrun) {
-       			string buildMSG = " { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
+       			string buildMSG = " { \"channel\" : \"" DM_PERCY "\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
        			slackthread->send(buildMSG); //Add buildMSG to queue, which the handle will send when ready.
        			firstrun = false;
        			//Start the timer operations and split onto another thread, keeping Slack IO responsive.
@@ -157,15 +161,8 @@ int main(int argc, char** argv)
        		}
 
        		slack_io.run();
-
-//       		while ( slack_io.run_one() ) { //Stop if the Slack websocket breaks.
-       			/*
-       			 * Anything here will effect Slack responsiveness, but if it's quick probably won't get noticed.
-       			 * One completion of the loop occurs each time Slack IO does something - most likely a user sent a message.
-       			 */
-//       		}
-
        		slack_io.restart(); //Make sure we start a new connection and don't try to reestablish the old one.
+
        	}
 
         std::cout << "ASync Finished!" << endl;
