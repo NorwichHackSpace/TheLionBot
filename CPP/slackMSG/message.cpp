@@ -15,11 +15,7 @@
 #include <regex>
 
 using namespace std;
-
-/*
- * Slack     : READ: {"type":"message","subtype":"channel_join","user":"U020SHRDQ2E","text":"<@U020SHRDQ2E> has joined the channel","team":"T0U7PLNEP","channel":"C0U8Y6ALE","event_ts":"1620143115.481200","ts":"1620143115.481200"}
- */
-
+response useemoji;
 string slack::slackMsgHandle( string text, string user, string channel, string event ) {
 
 	string JSON = "";
@@ -128,8 +124,23 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got |)(in|arriving|out|here|left|leaving)\\W*)");
 	if ( regex_match(text , e) ) {
 		string response = slack::amendlog( text, user );
-		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+		if ( (rand() % 100) > 1 ) {
+			string emojis[] = {
+					"bowtie",
+					"thumbsup",
+					"lion_face",
+					"grinning",
+					"white_check_mark",
+					"wave"
+			};
+			int size = ((&emojis)[1] - emojis);
+			JSON = slack::reaction(channel , event , emojis[useemoji.random(size)]);
+			if ( JSON == "{\"ok\":true}" ) { return ""; }
+		}
+		JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" , \"thread_ts\" : \"" + event + "\" } " ;
 		return JSON;
+		//JSON = " { \"channel\" : \"" + channel + "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } " ;
+
 	}
 
 	e = ("([Ee]veryone|[Aa]ll).*( out| empty| left).*");

@@ -136,7 +136,7 @@ void ws_session::do_start() // Start the asynchronous operation
      * of user and channel details also.
      */
 
-	slack::startJSON.Parse(slack::HTTP("start").c_str()); //Populate 'startJSON' with data from Slack Web API call 'start'
+	slack::startJSON.Parse(slack::RTM("start").c_str()); //Populate 'startJSON' with data from Slack Web API call 'start'
 	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::startJSON["url"].GetString());
 	if (!slackWSurl.isValid())
 	{
@@ -321,7 +321,7 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 			slack::slackDoorbotHandle( text, user, channel, event );
 		} else {
 			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
-			if (text != "") {
+			if (text != "") { //It's not a fail if response is empty. It just means we handled the response in the called function already.
 				std::cout << "Slack     : WRITE: " << text << std::endl << std::endl;
 				state_->send(text); //Add message to queue
 			}
@@ -366,7 +366,18 @@ void ws_session::on_close(beast::error_code ec)
 
 //////////////////////////////////////////////////////////////////////
 
-string slack::HTTP( string call ) {
+string slack::reaction( string channel, string timestamp, string emoji ) {
+	string call = "add?channel=" + channel + "&name=" + emoji + "&timestamp=" + timestamp ;
+	return slack::HTTP("reactions", call);
+}
+
+string slack::RTM( string call ) { //Straight forward
+	return slack::HTTP("rtm", call);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+string slack::HTTP( string type, string call ) {
 
 	string slack_token = settings.GetValue("Slack", "Token", "Unset");
 	if ( slack_token.empty() || slack_token == "Unset" ) {
@@ -381,7 +392,7 @@ string slack::HTTP( string call ) {
     {
         auto const host = "slack.com"; //I doubt Slack will change it's URL.
         auto const port = "443";
-        string target = "/api/rtm." + call + "?token=" + slack_token;
+        string target = "/api/" + type + "." + call;
         int version = 11; //HTTP Version. 1.1 Recommended.
 
         net::io_context ioc;
@@ -405,6 +416,7 @@ string slack::HTTP( string call ) {
         http::request<http::string_body> req{http::verb::get, target, version};
         req.set(http::field::host, host);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+        req.set(http::field::authorization, "Bearer " + slack_token);
 
         // Send the HTTP request to the remote host
         http::write(stream, req);

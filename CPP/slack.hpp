@@ -49,8 +49,11 @@ using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace slack { //The simple stuff
 
 	//slack.cpp
-	std::string HTTP( std::string call ) ;
+	std::string HTTP( std::string type, std::string call ) ;
+	std::string RTM( std::string call ) ;
+
 	std::string usertoname( std::string user ) ;
+	std::string reaction( std::string channel, std::string timestamp, std::string emoji ) ;
 
 	extern rapidjson::Document startJSON; //Set by TheLionBot.cpp, hopefully.
 

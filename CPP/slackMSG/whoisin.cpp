@@ -15,6 +15,45 @@
 using namespace std;
 #define BUGLINE std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
 
+/*
+ * BEGIN NEW STUFF
+ */
+template <typename TimePoint> std::string to_string(const TimePoint& time_point) {
+    return std::to_string(time_point.time_since_epoch().count());
+}
+void statPooler() {
+		//Convert data from whoisin to the minute stats, the minute stats to the hour, etc... and save into the database.
+
+		//Find first minute to parse from 'whoisin'
+		string sql;
+		sql = "SELECT timeIn FROM whoisin ORDER BY timeIn ASC LIMIT 0, 1;"; //Create SQL statement
+		rapidjson::Document json = database.exec(sql);
+		assert(json.IsObject());
+		const rapidjson::Value& firstTime = json["db"][0]["timeIn"];
+		std::cout << firstTime.GetString() << std::endl;
+
+		//Cast the string-time to a chrono object
+		// https://stackoverflow.com/questions/21021388/how-to-parse-a-date-string-into-a-c11-stdchrono-time-point-or-similar
+		std::tm tm = {};
+		//           2021-05-04 21:27:39     "%Y-%m-%e %H:%M:%S"
+		//strptime("Thu Jan 9 2014 12:35:34", "%a %b %d %Y %H:%M:%S", &tm);
+		strptime(firstTime.GetString(), "%Y-%m-%e %H:%M:%S", &tm);
+		auto tp = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+
+		//Cast the chrono object to time points
+	    using namespace std::literals::chrono_literals;
+	    using Sec = std::chrono::seconds;
+	    using Hour = std::chrono::hours;
+
+	    std::cout << "Time In\t\t" "Cast\t\n";
+	    std::cout << "(ms)\t\t"  "(s)\t\t" "(hr)\t\t \n";
+        std::cout
+            << to_string(tp) << "\t\t"
+            << to_string(std::chrono::time_point_cast<Sec>(tp)) << "\t\t"
+            << to_string(std::chrono::time_point_cast<Hour>(tp)) << "\t\n";
+
+}
+
 response leaving;
 response arriving;
 
@@ -26,7 +65,7 @@ std::string slack::amendlog( string text, string user ) {
 
 	e = (".*([Oo]ut|[Ll]eft|[Ll]eaving).*");
 	if ( regex_match(text , e) ) {
-		sql = "UPDATE whoisin SET timeOut=datetime('now','localtime') WHERE id='" + user + "' AND timeOut=0;"; //Create SQL statement
+		sql = "UPDATE whoisin SET timeOut=datetime('now') WHERE id='" + user + "' AND timeOut=0;"; //Create SQL statement
 		string responses[] = {
 					"Hope it went well " + slack::usertoname(user) + "!",
 					"Please make sure the door is closed properly, it's a bit sticky sometimes.",
@@ -40,7 +79,7 @@ std::string slack::amendlog( string text, string user ) {
 		int size = ((&responses)[1] - responses);
 		response = responses[leaving.random(size)];
 	} else { // If not leaving, must be coming in...
-		sql = "INSERT INTO whoisin(timeIn,id,timeOut) VALUES ( datetime('now','localtime') ,'" + user + "',0);"; //Create SQL statement
+		sql = "INSERT INTO whoisin(timeIn,id,timeOut) VALUES ( datetime('now') ,'" + user + "',0);"; //Create SQL statement
 		string responses[] = {
 					"Welcome to the Hackspace " + slack::usertoname(user),
 					"Enjoy your stay " + slack::usertoname(user),
@@ -50,6 +89,7 @@ std::string slack::amendlog( string text, string user ) {
 		};
 		int size = ((&responses)[1] - responses);
 		response = responses[arriving.random(size)];
+		statPooler(); //DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*
 	}
  database.exec(sql);
  return response;
@@ -61,7 +101,7 @@ std::string slack::amendlog( unsigned int population ) { //Everybody out!
 	string response;
 
 	if (!population) {
-		sql = "UPDATE whoisin SET timeOut=datetime('now','localtime') WHERE timeOut=0;"; //Create SQL statement
+		sql = "UPDATE whoisin SET timeOut=datetime('now') WHERE timeOut=0;"; //Create SQL statement
 		string responses[] = {
 				"Thanks for the update!",
 				"Brill, I'll make a note of it.",
@@ -91,7 +131,7 @@ std::string slack::occupancy() {
 	sql = "SELECT * FROM whoisin WHERE timeOut=0 ORDER BY timeIn ASC LIMIT 0, 10;"; //Create SQL statement
 	rapidjson::Document json = database.exec(sql);
 	assert(json.IsObject());
-	const rapidjson::Value& occupiers = json["sql"];
+	const rapidjson::Value& occupiers = json["db"];
 
 	if ( !occupiers.Size() ) {
 		string responses[] = {

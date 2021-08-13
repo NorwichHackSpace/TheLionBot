@@ -71,7 +71,6 @@ class sqlite {
 				   rapidjson::Document json;
 
 				   std::string _json; //Buffer for making JSON
-				   //_json = "{ \"sql\": [ ";
 				   _rc = sqlite3_exec(_db, _sql, callback, &_json, &_zErrMsg); // Forth here is first argument to callback
 
 				   if( _rc != SQLITE_OK ){
@@ -80,8 +79,7 @@ class sqlite {
 					  std::cout << "Database  : Error: " << err << std::endl;
 					  json.Parse(err.c_str());
 				   } else {
-					   //_json.append(" ] }");
-					   _json = "{ \"sql\": [ " + _json + " ] }";
+					   _json = "{ \"db\": [ " + _json + " ] }";
 					   std::cout << "Database  : JSON: " << _json << std::endl;
 					   if ( json.Parse(_json.c_str()).HasParseError() ) {
 						   std::string err = "{ \"error\": { \"state\" : true, \"msg\": \"Unable to parse string to JSON.\" } }";

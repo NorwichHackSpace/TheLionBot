@@ -96,7 +96,7 @@ void idlepost( const boost::system::error_code& e ) {
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	slackthread->send(" { \"channel\" : \"" CHAN_RANDOM "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 	//Reschedule
 	int time_out = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
 	idle_timer.expires_from_now( boost::posix_time::minutes(time_out) );
