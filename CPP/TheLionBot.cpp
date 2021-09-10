@@ -29,7 +29,7 @@ CSimpleIniA settings;
 sqlite database;
 
 //Setup shared WS handle
-auto const slackthread = boost::make_shared<shared_state>("ws");
+const boost::detail::sp_if_not_array<shared_state>::type slackthread = boost::make_shared<shared_state>("ws");
 
 //Setup timers for API calling globally to allow recursion
 asio::io_context api_io(1);
@@ -96,7 +96,7 @@ void idlepost( const boost::system::error_code& e ) {
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_RANDOM "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 	//Reschedule
 	int time_out = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
 	idle_timer.expires_from_now( boost::posix_time::minutes(time_out) );
@@ -144,6 +144,8 @@ int main(int argc, char** argv)
        		if (firstrun) {
        			string buildMSG = " { \"channel\" : \"" DM_PERCY "\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
        			slackthread->send(buildMSG); //Add buildMSG to queue, which the handle will send when ready.
+       			buildMSG = " { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"Started build " __DATE__ " " __TIME__ "! :lion_face: \" , \"type\" : \"message\" } ";
+       			//slackthread->send(buildMSG); //Add buildMSG to queue, which the handle will send when ready.
        			firstrun = false;
        			//Start the timer operations and split onto another thread, keeping Slack IO responsive.
        			std::thread api_call{[](){

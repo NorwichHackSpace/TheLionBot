@@ -21,6 +21,13 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	string JSON = "";
 	regex e;
 
+//Doorbot
+	if ( user == USER_DOORBOT || ( channel == CHAN_DOORSTATUS && user == USER_PERCY) ) {
+		slack::slackDoorbotHandle (text, user, channel, event);
+		JSON = "";
+		return JSON;
+	}
+
 //Wiki test
 	e = ("(lion:wiki)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
@@ -123,6 +130,8 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 
 	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got |)(in|arriving|out|here|left|leaving)\\W*)");
 	if ( regex_match(text , e) ) {
+		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \" DEBUG - SOMEONE LOGGED THEIR STATUS \" , \"type\" : \"message\" } ");
+		signinWait_timer.cancel(); //Cancel the 'wait for someone to sign in after door unlocked' set in doorbot.cpp
 		string response = slack::amendlog( text, user );
 		if ( (rand() % 100) > 1 ) {
 			string emojis[] = {

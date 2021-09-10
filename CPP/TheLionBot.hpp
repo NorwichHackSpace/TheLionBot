@@ -28,15 +28,16 @@
 
 #define INI_PATH "TheLionBot.conf"
 
-#define SLACK_TIMEOUT "30" //Seconds
-#define WIKI_POLL "420" //Minutes (420 Mins = 7 Hours)
+#define SLACK_TIMEOUT "30" //Minutes (420 minutes = 7 hours)
+#define WIKI_POLL "420" //Seconds
 
 #define WORD_SEPERATORS "., \"'()[]<>;:-+&?!\n\t"
 
 #define BUGLINE //std::cout << "PASSED LINE " << __LINE__ << " inside " << __FILE__ << std::endl;
 
 #define USER_PERCY "U0V2J8FRA"
-#define USER_DOORBOT "CMFJQ7NNB"
+#define USER_DOORBOT "UTDJ1DGUU"
+#define BOT_DOORBOT "BTDJ1DFGC"
 #define DM_PERCY "D81AQQPFT"
 #define CHAN_RANDOM "C0U8Y6BQW"
 #define CHAN_DOORSTATUS "CUQV9AGBW"
@@ -46,6 +47,7 @@
 
 extern CSimpleIniA settings;
 
+extern boost::asio::deadline_timer signinWait_timer;
 extern boost::asio::deadline_timer idle_timer;
 
 //Do not add code below this line

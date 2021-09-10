@@ -125,6 +125,8 @@ class shared_state
 		void send  (std::string message);
 };
 
+extern const boost::detail::sp_if_not_array<shared_state>::type slackthread;
+
 // Report a failure
 void fail(beast::error_code ec, char const* what) ;
 

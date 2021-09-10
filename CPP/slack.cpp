@@ -306,25 +306,20 @@ void ws_session::on_read( beast::error_code ec, std::size_t bytes_transferred)
 		std::string text = slackRead["text"].GetString();
 		std::string event = slackRead["ts"].GetString();
 
-		//DEBUG STUFF
-		if (text == "lion:reconnect" && channel == CHAN_LION_STATUS) {
+		// Reconnect failsafe
+		if (text == "reconnect" && channel == CHAN_LION_STATUS) {
 			//Close the WebSocket connection
 			ws_.async_close(websocket::close_code::normal,
 					beast::bind_front_handler(
 							&ws_session::on_close,
 							shared_from_this()));
 		}
-		//END DEBUG STUFF
 
 		// Process the strings
-		if (channel == CHAN_DOORSTATUS && user == USER_DOORBOT) { //Only for Dootbot messages in the #door-status channel
-			slack::slackDoorbotHandle( text, user, channel, event );
-		} else {
-			text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
-			if (text != "") { //It's not a fail if response is empty. It just means we handled the response in the called function already.
-				std::cout << "Slack     : WRITE: " << text << std::endl << std::endl;
-				state_->send(text); //Add message to queue
-			}
+		text = slack::slackMsgHandle ( text, user, channel, event ); //Split into message.cpp
+		if (text != "") { //It's not a fail if response is empty. It just means we handled the response in the called function already.
+			std::cout << "Slack     : WRITE: " << text << std::endl << std::endl;
+			state_->send(text); //Add message to queue
 		}
 	} else if ( slackRead.HasMember("type") && !slackRead.HasMember("subtype") && slackRead["type"] == "hello" ) {
 		connected_ = true; //Messages get queued until Slack confirms that it is ready
