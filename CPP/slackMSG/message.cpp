@@ -22,7 +22,7 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	regex e;
 
 //Doorbot
-	if ( user == USER_DOORBOT || ( channel == CHAN_DOORSTATUS && user == USER_PERCY) ) {
+	if ( user == USER_DOORBOT || ( channel == CHAN_DOORSTATUS &&  user == USER_PERCY) ) {
 		slack::slackDoorbotHandle (text, user, channel, event);
 		JSON = "";
 		return JSON;
@@ -102,8 +102,6 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 
 //who is in?
 	//Log
-	e = ("(([Ii]n).*([Oo]ut))");
-	//TODO: When we have a quick visit this is normally used, but not sure how ( or even if ) to handle it yet.
 
 	e = ("(\\w*)( is )(here|in)(.|)");
 	if ( regex_match(text , e) ) {
@@ -129,8 +127,10 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 	}
 
 	e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got |)(in|arriving|out|here|left|leaving)\\W*)");
-	if ( regex_match(text , e) ) {
-		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \" DEBUG - SOMEONE LOGGED THEIR STATUS \" , \"type\" : \"message\" } ");
+	if ( regex_match(text , e)
+			|| regex_match(text , regex("(([Ii]n).*([Oo]ut))"))
+			)
+	{
 		signinWait_timer.cancel(); //Cancel the 'wait for someone to sign in after door unlocked' set in doorbot.cpp
 		string response = slack::amendlog( text, user );
 		if ( (rand() % 100) > 1 ) {

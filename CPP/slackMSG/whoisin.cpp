@@ -89,7 +89,7 @@ std::string slack::amendlog( string text, string user ) {
 		};
 		int size = ((&responses)[1] - responses);
 		response = responses[arriving.random(size)];
-		statPooler(); //DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*DEBUG NEW STUFF*
+		statPooler();
 	}
  database.exec(sql);
  return response;
@@ -114,9 +114,12 @@ std::string slack::amendlog( unsigned int population ) { //Everybody out!
 				"Phew!",
 				"If no one is in to see the place empty, how do you know it is empty? My logic circuits are frazzled.",
 				"Thanks for checking.",
-		};
+  	};
 		int size = ((&responses)[1] - responses);
 		response = responses[emptying.random(size)];
+		if ( slack::doorstatus() == "unlocked" ) {
+			response += "\\nCan you make sure to lock the door please?";
+		}
 	}
 	database.exec(sql);
 	return response;
