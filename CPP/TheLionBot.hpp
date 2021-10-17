@@ -44,10 +44,13 @@
 #define CHAN_LION_STATUS "C01KZGJQ9NH"
 #define CHAN_WIKI "CML8QJ3U3"
 #define CHAN_GENERAL "C0U8Y6ALE"
+#define CHAN_WHOISIN "C2CJR4V63"
+
 
 extern CSimpleIniA settings;
 
 extern boost::asio::deadline_timer signinWait_timer;
+extern boost::asio::deadline_timer signoutWait_timer;
 extern boost::asio::deadline_timer idle_timer;
 
 //Do not add code below this line

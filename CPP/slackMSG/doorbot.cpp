@@ -32,20 +32,17 @@ std::string slack::doorstatus() {
 
 void signinWait( const boost::system::error_code& e ) {
 	//Check
-	if( e )
-	{
-		return; // we were cancelled
-	}
+	if( e ) { return; }
 
 	//Do
 	string responses[] = {
 			"Hello? Is someone there?",
-			"Knock knock.\\n Who's there?\\n Don't know. \\n Don't know who? \\n Don't know who is...",
+			"Ah, a visitor....",
 			"Ahwooga, Ahwooga. Unexpected visitor. Ahwooga, Ahwooga!"
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	slackthread->send(" { \"channel\" : \"" CHAN_WHOISIN "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 }
 
 void signoutWait( const boost::system::error_code& e ) {
@@ -59,7 +56,7 @@ void signoutWait( const boost::system::error_code& e ) {
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	slackthread->send(" { \"channel\" : \"" CHAN_WHOISIN "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 }
 
 void lockedWait( const boost::system::error_code& e ) {
@@ -68,12 +65,12 @@ void lockedWait( const boost::system::error_code& e ) {
 
 	//Do
 	string responses[] = {
-			"Looks like the door is unlocked by nobody is in?\\n",
-			"Has everyone left? The doors still unlocked.\\n"
+			"Looks like the door is unlocked but nobody is in?\\n",
+			"Has everyone left? The door's still unlocked.\\n"
 	};
 	int size = ((&responses)[1] - responses);
 	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	slackthread->send(" { \"channel\" : \"" CHAN_WHOISIN "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
 }
 
 void slack::slackDoorbotHandle( string text, string user, string channel, string event_ts ) {
@@ -105,7 +102,7 @@ void slack::slackDoorbotHandle( string text, string user, string channel, string
 		   			return;
 				}
 			} else {
-				sql = "SELECT * FROM whoisin WHERE timeOut = 0 ORDER BY timeIn DESC LIMIT 0, 1;"; //Create SQL statement
+				sql = "SELECT * FROM whoisin WHERE timeOut = 0 ORDER BY timeIn DESC LIMIT 0, 10;"; //Someone still in
 				rapidjson::Document json = database.exec(sql);
 				assert(json.IsObject());
 				const rapidjson::Value& occupiers = json["db"];
