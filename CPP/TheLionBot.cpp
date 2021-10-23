@@ -112,8 +112,6 @@ void loadSettings() {
 //**** And obviously, the main function... ****
 int main(int argc, char** argv)
 {
-	srand(time(0)); // Make our random a new random.
-
 	loadSettings(); //Load settings from the conf file into 'settings'
 
 	//Setup all the database tables
@@ -132,6 +130,8 @@ int main(int argc, char** argv)
        	bool threadsafe = true;
 
        	while (threadsafe) { //TODO: Make use of threadsafe. So far this will always be true.
+
+       		srand(time(0)); // Make our random a new random.
 
        		boost::make_shared<ws_session>(
        			  slack_io

@@ -45,6 +45,7 @@
 #define CHAN_WIKI "CML8QJ3U3"
 #define CHAN_GENERAL "C0U8Y6ALE"
 #define CHAN_WHOISIN "C2CJR4V63"
+#define CHAN_CRYPTO "C01UF8FCHBR"
 
 
 extern CSimpleIniA settings;

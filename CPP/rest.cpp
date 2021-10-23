@@ -66,7 +66,8 @@ string fetch::https ( const char * const host, const char * const target, const 
     	// Gracefully close the stream
         beast::error_code ec;
         stream.shutdown(ec);
-        if(ec == net::error::eof)
+
+        if(ec == net::error::eof || ec == boost::asio::ssl::error::stream_truncated)
         {
             ec = {};
         }

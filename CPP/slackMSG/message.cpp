@@ -28,6 +28,31 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 		return JSON;
 	}
 
+//Crypto Test
+	e = ("(lion:crypto)");
+	if ( regex_match(text , e) ) {
+		// Working on this...
+		//https://api.coingecko.com/api/v3/coins/markets?vs_currency=gbp&ids=bitcoin
+
+		//[{"id":"bitcoin","symbol":"btc","name":"Bitcoin","image":"https://assets.coingecko.com/coins/images/1/large/bitcoin.png?1547033579","current_price":44111,"market_cap":835849142412,"market_cap_rank":1,"fully_diluted_valuation":931114331709,"total_volume":29127049632,"high_24h":46360,"low_24h":43882,"price_change_24h":-1318.954345336257,"price_change_percentage_24h":-2.90327,"market_cap_change_24h":-18954147416.056885,"market_cap_change_percentage_24h":-2.21737,"circulating_supply":18851425.0,"total_supply":21000000.0,"max_supply":21000000.0,"ath":48700,"ath_change_percentage":-9.27958,"ath_date":"2021-10-20T14:54:17.702Z","atl":43.9,"atl_change_percentage":100533.96839,"atl_date":"2013-07-05T00:00:00.000Z","roi":null,"last_updated":"2021-10-23T00:28:19.259Z"}]
+
+		rapidjson::Document replyJSON;
+		const char * crypto_URL = settings.GetValue("Crypto", "URL", "api.coingecko.com"); //Unlikely this will ever change, but allowing as an undocumented feature anyway.
+		std::string http = fetch::https(
+				crypto_URL,
+				 "/api/v3/coins/markets?vs_currency=gbp&ids=bitcoin&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h"
+		);
+		std::cout << "DEBUG 43.4: " << http.c_str() << std::endl;
+		replyJSON.Parse( http.c_str() );
+		rapidjson::Value& data = replyJSON[0]; //TODO: I don't know why they reply an array of 0 size. I assume it's possible to request multiple coins in one request?...
+		string cypto = data["name"].GetString();
+		unsigned int current_price = data["current_price"].GetInt();
+		string fiat = "GBP"; //Not returned by API
+
+		slackthread->send(" { \"channel\" : \"" + channel + "\" , \"text\" : \"Price: 1 " + cypto + " is worth " + to_string((int) current_price) + " " + fiat + "\" , \"type\" : \"message\" } ");
+	}
+
+
 //Wiki test
 	e = ("(lion:wiki)"); //Be specific for now, this is just for debuggin.
 	if ( regex_match(text , e) ) {
@@ -126,7 +151,7 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 			}
 		}
 
-		e = ("([Ii]n)|([Oo]ut)|(.*([Ii].|[Hh]ave.|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (currently |now |just |got )(in|arriv(ed|ing)|out|here|left|leaving).*)");
+		e = ("([Ii]n)|([Oo]ut)|([Ii].|[Hh]ave.|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (|currently |now |just |got )(in|arriv(ed|ing)|out|here|left|leaving)");
 		if ( regex_match(text , e)
 				|| regex_match(text , regex("([Nn]ow |[Aa]bout (to |)|)([Bb]ack|[Hh]ead(ing|)) ([Ii]n|[Oo]ut)"))
 				)
