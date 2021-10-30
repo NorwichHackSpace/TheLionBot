@@ -43,13 +43,17 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 				 "/api/v3/coins/markets?vs_currency=gbp&ids=bitcoin&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h"
 		);
 		std::cout << "DEBUG 43.4: " << http.c_str() << std::endl;
-		replyJSON.Parse( http.c_str() );
-		rapidjson::Value& data = replyJSON[0]; //TODO: I don't know why they reply an array of 0 size. I assume it's possible to request multiple coins in one request?...
-		string cypto = data["name"].GetString();
-		unsigned int current_price = data["current_price"].GetInt();
-		string fiat = "GBP"; //Not returned by API
+		rapidjson::ParseResult ok = replyJSON.Parse( http.c_str() );
+		if ( ok ) { //Check we are able to parse the JSON
+			rapidjson::Value& data = replyJSON[0]; //TODO: I don't know why they reply an array of 0 size. I assume it's possible to request multiple coins in one request?...
+			string cypto = data["name"].GetString();
+			unsigned int current_price = data["current_price"].GetInt();
+			string fiat = "GBP"; //Not returned by API
 
-		slackthread->send(" { \"channel\" : \"" + channel + "\" , \"text\" : \"Price: 1 " + cypto + " is worth " + to_string((int) current_price) + " " + fiat + "\" , \"type\" : \"message\" } ");
+			slackthread->send(" { \"channel\" : \"" + channel + "\" , \"text\" : \"Price: 1 " + cypto + " is worth " + to_string((int) current_price) + " " + fiat + "\" , \"type\" : \"message\" } ");
+		} else { //Didn't get a result from the API
+			slackthread->send(" { \"channel\" : \"" + channel + "\" , \"text\" : \"Hmm. Can't seem to find the price at the moment... \" , \"type\" : \"message\" } ");
+		}
 	}
 
 
@@ -151,7 +155,8 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 			}
 		}
 
-		e = ("([Ii]n)|([Oo]ut)|([Ii].|[Hh]ave.|)(’m|'m|am|are|[Nn]ow|[Jj]ust) (|currently |now |just |got )(in|arriv(ed|ing)|out|here|left|leaving)");
+		//You can test the next line here --> https://regexr.com/68etn
+		e = ("(^[Ii]n)(\\W|$)|(^[Oo]ut)(\\W|$)|([Ii]|[Oo]ne |^|[Hh]ave)(|[Hh]ave|[Hh]as)(’m|'m| am| are| is|[Nn]ow|[Jj]ust|) (|currently |now |just |got |just got )(in|arriv(ed|ing)|out|here|left|leaving|returned)");
 		if ( regex_match(text , e)
 				|| regex_match(text , regex("([Nn]ow |[Aa]bout (to |)|)([Bb]ack|[Hh]ead(ing|)) ([Ii]n|[Oo]ut)"))
 				)

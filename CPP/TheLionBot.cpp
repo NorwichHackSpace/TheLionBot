@@ -56,21 +56,23 @@ void wikitest( const boost::system::error_code& e ) {
 			 wiki_URL,
 			 "/api.php?format=json&action=query&list=recentchanges&rclimit=1&rcprop=user|title|timestamp"
 	);
-	 replyJSON.Parse( LastEdit.c_str() );
-	 rapidjson::Value& wiki = replyJSON["query"]["recentchanges"][0];
-	string timestamp = wiki["timestamp"].GetString();
-	if (wiki_last_edit_time == "") { //First time running
-		wiki_last_edit_time = timestamp;
-	} else if (timestamp != wiki_last_edit_time) {
-		wiki_last_edit_time = timestamp;
-		string type = wiki["type"].GetString();
-		string page = wiki["title"].GetString();
-		string user = wiki["user"].GetString();
-		std::replace(page.begin(), page.end(), ' ', '_'); //Need to add underscores for URL
-		string response = "Detected " + type + " of page https:\\/\\/wiki.norwichhackspace.org\\/index.php?title=" + page + " at " + timestamp  + ", by " + user + " \\n ";
-		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
-	}
-	//Reschedule
+	rapidjson::ParseResult ok = replyJSON.Parse( LastEdit.c_str() );
+	if ( ok ) { //Check we are able to parse the JSON
+	    rapidjson::Value& wiki = replyJSON["query"]["recentchanges"][0];
+		string timestamp = wiki["timestamp"].GetString();
+		if (wiki_last_edit_time == "") { //First time running
+			wiki_last_edit_time = timestamp;
+		} else if (timestamp != wiki_last_edit_time) {
+			wiki_last_edit_time = timestamp;
+			string type = wiki["type"].GetString();
+			string page = wiki["title"].GetString();
+			string user = wiki["user"].GetString();
+			std::replace(page.begin(), page.end(), ' ', '_'); //Need to add underscores for URL
+			string response = "Detected " + type + " of page https:\\/\\/wiki.norwichhackspace.org\\/index.php?title=" + page + " at " + timestamp  + ", by " + user + " \\n ";
+			slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + response + "\" , \"type\" : \"message\" } ");
+		}
+	 }
+	//Reschedule (even if we failed)
 	int poll_time = std::stoi( settings.GetValue("Wiki", "PollTime", WIKI_POLL) );
 	wiki_timer.expires_from_now( boost::posix_time::seconds(poll_time) );
 	wiki_timer.async_wait(wikitest);

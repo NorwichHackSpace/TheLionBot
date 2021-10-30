@@ -71,6 +71,8 @@ string fetch::https ( const char * const host, const char * const target, const 
         {
             ec = {};
         }
+        if(ec == net::error::host_not_found_try_again || ec == net::error::host_not_found) {
+        }
         if(ec)
             throw beast::system_error{ec};
 
