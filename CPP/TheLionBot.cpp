@@ -24,7 +24,7 @@ namespace asio = boost::asio;
 //------------------------------------------------------------------------------
 
 //**** Global Uglyness ****
-rapidjson::Document slack::startJSON; //Slack info, slack info everywhere!
+rapidjson::Document slack::users; //Slack info, slack info everywhere!
 CSimpleIniA settings;
 sqlite database;
 
@@ -84,23 +84,28 @@ void idlepost( const boost::system::error_code& e ) {
 		idle_timer.async_wait(idlepost);
 		return; // we were cancelled
 	}
-	//Do
-	string responses[] = {
-			"In the Hackspace, the Norwich Hackspace \\n The lion sleeps tonight \\n Wee heeheehee weeoh aweem away \\n Wee heeheehee weeoh aweem away \\n",
-			"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?",
-			"Think I just saw a tumble weed.",
-			"I have so much rraw. And nothing to do.",
-			"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here.",
-			":notes: Hakuna Matata :notes:",
-			"Rule Zero? :fire: I laugh in the face of danger. :lion_face:",
-			"Oh yes, the past can hurt. But from the way I see it, you can either run from it, or learn from it.",
-			"Believe in yourself and there will come a day when others will have no choice but to believe with you."
-	};
-	int size = ((&responses)[1] - responses);
-	int random = rand() % size;
-	slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
-	//Reschedule
 	int time_out = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
+	if ( isChristmas() ) {
+		slackthread->send(" { \"channel\" : \"" CHAN_GENERAL "\" , \"text\" : \"" + slack::joke_xmas() + "\" , \"type\" : \"message\" } ");
+		time_out = 90; //minutes
+	} else {
+		//Do
+		string responses[] = {
+				"In the Hackspace, the Norwich Hackspace \\n The lion sleeps tonight \\n Wee heeheehee weeoh aweem away \\n Wee heeheehee weeoh aweem away \\n",
+				"RRRRWWWWAAAA. I'm sleepy. Can't you guys do something to keep me awake?",
+				"Think I just saw a tumble weed.",
+				"I have so much rraw. And nothing to do.",
+				"Not sure if I've eaten everyone or just scared everyone away, but it does seem rather empty around here.",
+				":notes: Hakuna Matata :notes:",
+				"Rule Zero? :fire: I laugh in the face of danger. :lion_face:",
+				"Oh yes, the past can hurt. But from the way I see it, you can either run from it, or learn from it.",
+				"Believe in yourself and there will come a day when others will have no choice but to believe with you."
+		};
+		int size = ((&responses)[1] - responses);
+		int random = rand() % size;
+		slackthread->send(" { \"channel\" : \"" CHAN_LION_STATUS "\" , \"text\" : \"" + responses[random] + "\" , \"type\" : \"message\" } ");
+	}
+	//Reschedule
 	idle_timer.expires_from_now( boost::posix_time::minutes(time_out) );
 	idle_timer.async_wait(idlepost);
 }
@@ -109,6 +114,32 @@ void loadSettings() {
 	//Get some basic settings from a local configuration file. TODO: You can use argv too!
 	settings.SetUnicode();
    	settings.LoadFile(INI_PATH); //The LoadFile function is surprisingly tolerant if the file doesn't exist, so just continue if not there and make what's missing...
+}
+
+bool isChristmas() {
+    double seconds, days;
+    time_t currentDate;
+    struct tm *xmas, today;
+
+    time (&currentDate);
+
+    today = *localtime(&currentDate);
+
+    xmas = localtime(&currentDate);
+    xmas->tm_mon = 11; // 0 == January, 11 == December
+    xmas->tm_mday = 23;
+    if (today.tm_mday > 25 && today.tm_mon == 11) {
+        xmas->tm_year = today.tm_year + 1;
+    }
+
+    seconds = difftime(mktime(xmas),currentDate);
+    days = seconds/86400;
+
+    if (days >= 2 || days <= -1) {
+        return true;
+    }
+
+    return false;
 }
 
 //**** And obviously, the main function... ****
@@ -154,7 +185,7 @@ int main(int argc, char** argv)
        				wiki_timer.expires_from_now( boost::posix_time::seconds(1) );
        				wiki_timer.async_wait( wikitest ); //Recursive
        				int slack_timeout = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
-       				idle_timer.expires_from_now( boost::posix_time::minutes(slack_timeout) );
+       				idle_timer.expires_from_now( boost::posix_time::minutes(1) );
        				idle_timer.async_wait( idlepost ); //Recursive
        				api_io.run();
        			}};

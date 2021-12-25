@@ -11,6 +11,7 @@
 #include "../slack.hpp"
 #include <regex>
 #include "../rest.hpp"
+#include "../TheLionBot.hpp"
 
 using namespace std;
 
@@ -62,7 +63,7 @@ std::string slack::joke_xmas( ) {
 };
 
 std::string slack::joke( ) {
-
+	if ( isChristmas() ) { return slack::joke_xmas(); }
 	//Nicolas Cage jokes requested by Dan R
 	if (rand() % 2) { //50% odds
 		//fetch

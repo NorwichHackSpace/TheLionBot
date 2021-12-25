@@ -54,5 +54,7 @@ extern boost::asio::deadline_timer signinWait_timer;
 extern boost::asio::deadline_timer signoutWait_timer;
 extern boost::asio::deadline_timer idle_timer;
 
+bool isChristmas();
+
 //Do not add code below this line
 #endif /* CPP_THELIONBOT_HPP_ */

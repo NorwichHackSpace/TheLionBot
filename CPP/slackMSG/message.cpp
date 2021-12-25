@@ -155,7 +155,7 @@ string slack::slackMsgHandle( string text, string user, string channel, string e
 		}
 
 		//You can test the next line here --> https://regexr.com/68etn
-		e = ("(^[Ii]n)(\\W|$)|(^[Oo]ut)(\\W|$)|([Ii]|[Oo]ne |^|[Hh]ave)(|[Hh]ave|[Hh]as)(.+m| am| are| is|[Nn]ow|[Jj]ust|) (|currently |now |just |got |just got )(in|arriv(ed|ing)|out.*|here|left|leaving|returned)");
+		e = ("(^[Ii]n)(\\W|$)|(^[Oo]ut)(\\W|$)|([Ii]|[Oo]ne|^|[Hh]ave)(| [Hh]ave| [Hh]as)(.+m| am| are| is|[Nn]ow|[Jj]ust|) (|currently |now |just |got |just got )(in.*|arriv(ed|ing)|out.*|here|left|leaving|returned)");
 		if ( regex_match(text , e)
 				|| regex_match(text , regex("([Nn]ow |[Aa]bout (to |)|)([Bb]ack|[Hh]ead(ing|)) ([Ii]n|[Oo]ut)"))
 				)
