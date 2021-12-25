@@ -130,17 +130,23 @@ void ws_session::on_write( beast::error_code ec, std::size_t bytes_transferred)
 void ws_session::do_start() // Start the asynchronous operation
 {
     /*
-     * To establish a Websocket we first need to request a new token from Slack via rtc.start.
+     * To establish a Websocket we first need to request a new token from Slack via rtc.connect.
      * This is then used to form the URL in a new WSS request, instead of upgrading the connection.
-     * Note that we could just use rtc.connect but by using rtc.start, as a bonus, we end up with a JSON
-     * of user and channel details also.
      */
 
-	slack::startJSON.Parse(slack::RTM("start").c_str()); //Populate 'startJSON' with data from Slack Web API call 'start'
-	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(slack::startJSON["url"].GetString());
+	rapidjson::Document connect;
+
+	connect.Parse(slack::RTM("connect").c_str()); //Populate 'startJSON' with data from Slack Web API call 'connect'
+	if ( !connect.HasMember("url") ) {
+		//TODO: Handle error
+		cout << "No URL available for Websocket connection: " << slack::RTM("connect").c_str() << endl;
+		return;
+	}
+
+	LUrlParser::ParseURL slackWSurl = LUrlParser::ParseURL::parseURL(connect["url"].GetString());
 	if (!slackWSurl.isValid())
 	{
-		//TODO: Throw error instead of cout
+		//TODO: Handle error
 		cout << "URL Parsing error: " << slackWSurl.errorCode_ << endl;
 		return;
 	}
@@ -259,6 +265,7 @@ void ws_session::on_handshake(beast::error_code ec)
 
 void ws_session::do_listen()
 {
+
 	ws_.async_read(
 			buffer_,
 			beast::bind_front_handler(
@@ -446,12 +453,19 @@ string slack::usertoname( string user ) {
 	// bool string match  -- name begins with 'U' has a number, all letters in caps, and is nine chars long -- , user
 	//
 
-	// else if needs converting
-	for (rapidjson::Value::ConstValueIterator itr = slack::startJSON["users"].Begin(); itr != slack::startJSON["users"].End(); ++itr) { // Ok
-	    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
-	    	return (*itr)["profile"]["display_name_normalized"].GetString();
-	    }
+
+	if (!slack::users.IsObject()) {
+		slack::users.Parse(slack::HTTP( "users", "list" ).c_str());
 	}
 
-	return user; //TODO: If we can't find, try making a new request.
+	if ( slack::users.HasMember("members") && slack::users["members"].IsArray() ) {
+		for (rapidjson::Value::ConstValueIterator itr = slack::users["members"].Begin(); itr != slack::users["members"].End(); ++itr) { // Ok
+		    if ( itr->HasMember("id") && (*itr)["id"].GetString() == user  ) { // Ok
+		    	return (*itr)["profile"]["display_name_normalized"].GetString();
+		    }
+		}
+	}
+
+	slack::users.Parse(slack::HTTP( "users", "list" ).c_str());
+	return user;
 }

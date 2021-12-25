@@ -55,7 +55,7 @@ namespace slack { //The simple stuff
 	std::string usertoname( std::string user ) ;
 	std::string reaction( std::string channel, std::string timestamp, std::string emoji ) ;
 
-	extern rapidjson::Document startJSON; //Set by TheLionBot.cpp, hopefully.
+	extern rapidjson::Document users; //Set by TheLionBot.cpp, hopefully.
 
 	//jokes.cpp
 	std::string joke();
