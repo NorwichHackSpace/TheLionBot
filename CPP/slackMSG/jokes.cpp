@@ -22,11 +22,9 @@ std::string slack::joke_xmas( ) {
 			"Why are Christmas trees bad knitters? They keep losing their needles",
 			"What do you call a line of men waiting for a haircut? A barberqueue",
 			"Why was the turkey in the pop group? Because he was the only one with drumsticks!",
-			"What do you call a boomerang that does not come back? A stick",
 			"What do snowmen wear on their heads? Ice caps",
 			"Why was the snowman looking through the carrots? He was picking his nose",
 			"Two snowmen were standing in a field. One said , 'Can you smell carrots?'",
-			"A man walks into a bar ...ouch",
 			"What did Adam say the day before Christmas? 'It's Christmas, Eve'",
 			"What does Santa do with fat elves? He sends them to an Elf Farm",
 			"What did Cinderella say when her photos didn’t arrive on time? One day my prints will come",
@@ -56,6 +54,8 @@ std::string slack::joke_xmas( ) {
 			"Why are pirates called pirates? Because they arrrrrrr!",
 			"What do you call a blind reindeer? No-eye deer",
 			"What’s round and bad tempered? A vicious circle"
+			"A friend bought his wife a artificial leg for Christmas... Wasn't the main present.. Just a stocking filler. :socks: " //Submitted by Andy S
+			"Where do snowmen keep their money? In a snow bank." //Submitted bt Ben N
 	};
 	int size = ((&responses)[1] - responses);
 	string response = responses[jokes.sequence(size)];
@@ -81,6 +81,8 @@ std::string slack::joke( ) {
 
 	string responses[] = {
 			"Knock! Knock! Who's there? Dejav. Dejav who? Knock! Knock!  "
+			, "A man walks into a bar ...ouch"
+			, "What do you call a boomerang that does not come back? A stick"
 			, "Knock! Knock! Who's there? Oink oink. Oink oink who? Make up your mind—are you a pig, or an owl?!"
 			, "What’s the best thing about Switzerland?   I don’t know, but the flag is a big plus."
 			, "I invented a new word!     Plagiarism!"

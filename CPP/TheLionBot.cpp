@@ -87,7 +87,6 @@ void idlepost( const boost::system::error_code& e ) {
 	int time_out = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
 	if ( isChristmas() ) {
 		slackthread->send(" { \"channel\" : \"" CHAN_GENERAL "\" , \"text\" : \"" + slack::joke_xmas() + "\" , \"type\" : \"message\" } ");
-		time_out = 90; //minutes
 	} else {
 		//Do
 		string responses[] = {
@@ -135,7 +134,7 @@ bool isChristmas() {
     seconds = difftime(mktime(xmas),currentDate);
     days = seconds/86400;
 
-    if (days >= 2 || days <= -1) {
+    if (days >= 4 || days <= -1) {
         return true;
     }
 
@@ -185,7 +184,7 @@ int main(int argc, char** argv)
        				wiki_timer.expires_from_now( boost::posix_time::seconds(1) );
        				wiki_timer.async_wait( wikitest ); //Recursive
        				int slack_timeout = std::stoi( settings.GetValue("Slack", "IdleTimeout", SLACK_TIMEOUT) );
-       				idle_timer.expires_from_now( boost::posix_time::minutes(1) );
+       				idle_timer.expires_from_now( boost::posix_time::minutes(slack_timeout) );
        				idle_timer.async_wait( idlepost ); //Recursive
        				api_io.run();
        			}};
